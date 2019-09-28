@@ -17,14 +17,14 @@ with open("secret.yaml") as secretFile:
 
 bot = Bot(PAGE_ACCESS_TOKEN) # PyMessenger Bot
 app = Flask(__name__) # Flask app
-heap = [] # List backing for our priority heap
-
 
 #We will receive messages that Facebook sends our bot at this endpoint 
 @app.route("/", methods=["GET", "POST"])
 def receive_message():
     if request.method == "GET": # Facebook requested verification token
         token_sent = request.args.get("hub.verify_token")
+        print(token_sent)
+        print(VERIFY_TOKEN)
         return verify_fb_token(token_sent)
     else: # If the request wasn't GET it was a POST request
        output = request.get_json()
@@ -50,7 +50,7 @@ def verify_fb_token(token_sent):
 
 #chooses a random message to send to the user
 def get_message():
-    sample_responses = ["You are stunning!", "We're proud of you.", "Keep on being you!", "We're greatful to know you :)"]
+    sample_responses = ["Yeet"]
     # return selected item to the user
     return random.choice(sample_responses)
 
