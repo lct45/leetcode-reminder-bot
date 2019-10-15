@@ -50,7 +50,6 @@ def receive_message():
                 received_text(message)
             elif message.get("postback"):
                 received_postback(message)
-
     return "Message Processed"
 
 def received_text(event):
@@ -58,7 +57,7 @@ def received_text(event):
     recipient_id = event["recipient"]["id"] # page's facebook ID
     text = event["message"]["text"]
     
-    bot.send_text_message(sender_id, "yeet")
+    bot.send_text_message(sender_id, "I love Daniel.")
 
 def received_postback(event):
     sender_id = event["sender"]["id"] # the FB ID of the person sending the message
