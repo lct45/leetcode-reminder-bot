@@ -1,7 +1,7 @@
 import yaml
 import random
+import os
 from flask import Flask, request
-
 from pymessenger.bot import Bot
 
 """
@@ -23,7 +23,7 @@ app = Flask(__name__) # Flask app
 greetings =  {"greeting":[ #Greetings 
         {
         "locale":"default",
-        "text":"Hello! We're going to make a 10xer out of you, {{user_first_name}}!"
+        "text":"We're going to make a 10Xer out of you, {{user_first_name}}!"
         }
     ]}
 bot.set_greetings(greetings)
@@ -54,41 +54,28 @@ def receive_message():
     return "Message Processed"
 
 def received_text(event):
-    sender_id = event["sender"]["id"]        # the facebook ID of the person sending you the message
-    recipient_id = event["recipient"]["id"]  # the recipient's ID, which should be your page's facebook ID
+    sender_id = event["sender"]["id"] # the FB ID of the person sending the message
+    recipient_id = event["recipient"]["id"] # page's facebook ID
     text = event["message"]["text"]
     
-    bot.send_text_message(recipient_id, "yeet")
+    bot.send_text_message(sender_id, "yeet")
 
 def received_postback(event):
-    sender_id = event["sender"]["id"]        # the facebook ID of the person sending you the message
-    recipient_id = event["recipient"]["id"]  # the recipient's ID, which should be your page's facebook ID
+    sender_id = event["sender"]["id"] # the FB ID of the person sending the message
+    recipient_id = event["recipient"]["id"] # page's facebook ID
     payload = event["postback"]["payload"]
     
-    if payload=='start':
-        send_message(sender_id, "What's up?")
-        
+    if payload=='start': # message to 
+        bot.send_text_message(sender_id, "Hello, we're going to make a 10Xer out of you!")
+        image_path_list = [os.getcwd(), "images", "10Xer.png"]
+        bot.send_image_url(sender_id,"https://i.imgur.com/D4JtitY.png")
 
 def verify_fb_token(token_sent):
     #take token sent by facebook and verify it matches the verify token you sent
     #if they match, allow the request, else return an error 
     if token_sent == VERIFY_TOKEN:
         return request.args.get("hub.challenge")
-    return "Invalid verification token"
-
-#chooses a random message to send to the user
-def get_message():
-    sample_responses = ["Yeet"]
-    # return selected item to the user
-    return random.choice(sample_responses)
-
-#uses PyMessenger to send response to user
-def send_message(recipient_id, response):
-    #sends user the text message provided via input response parameter
-    bot.send_text_message(recipient_id, response)
-    return "success"
-
-    
+    return "Error: invalid verification token"
 
 if __name__ == "__main__":
     app.run()
