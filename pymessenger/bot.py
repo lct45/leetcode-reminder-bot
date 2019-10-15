@@ -303,29 +303,6 @@ class Bot:
         """ Deprecated, use send_raw instead """
         return self.send_raw(payload)
 
-    def set_greetings(self, gs_obj):
-        """Set a get started button shown on welcome screen for first time users
-            https://developers.facebook.com/docs/messenger-platform/reference/messenger-profile-api/get-started-button
-            Input:
-              gs_obj: Your formatted get_started object as described by the API docs
-            Output:
-              Response from API as <dict>
-                            "greeting":[
-              {
-                "locale":"default",
-                "text":"Hello {{user_first_name}}!"
-              }
-            ]
-        """
-        request_endpoint = '{0}/me/messenger_profile'.format(self.graph_url)
-        response = requests.post(
-            request_endpoint,
-            params = self.auth_args,
-            json = gs_obj
-        )
-        result = response.json()
-        return result
-
     def set_get_started(self, gs_obj):
         """Set a get started button shown on welcome screen for first time users
         https://developers.facebook.com/docs/messenger-platform/reference/messenger-profile-api/get-started-button
@@ -391,3 +368,21 @@ class Bot:
             )
             result = response.json()
             return result
+
+    def set_greeting(self, greeting_obj):
+        """Specify the greeting message people will see on the welcome screen of your bot.
+        https://developers.facebook.com/docs/messenger-platform/reference/messenger-profile-api/greeting
+        Input:
+            greeting_obj: Your formatted greeting object as described by the API docs
+        Output:
+            Response from API as <dict>
+            
+        """
+        request_endpoint = '{0}/me/messenger_profile'.format(self.graph_url)
+        response = requests.post(
+            request_endpoint,
+            params = self.auth_args,
+            json = greeting_obj
+        )
+        result = response.json()
+        return result
