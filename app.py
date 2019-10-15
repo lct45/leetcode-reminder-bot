@@ -1,6 +1,7 @@
 import yaml
 import random
 from flask import Flask, request
+
 from pymessenger.bot import Bot
 
 """
@@ -23,8 +24,6 @@ app = Flask(__name__) # Flask app
 def receive_message():
     if request.method == "GET": # Facebook requested verification token
         token_sent = request.args.get("hub.verify_token")
-        print(token_sent)
-        print(VERIFY_TOKEN)
         return verify_fb_token(token_sent)
     else: # If the request wasn't GET it was a POST request
        output = request.get_json()
@@ -37,6 +36,7 @@ def receive_message():
                 if message["message"].get("text"):
                     response_sent_text = get_message()
                     send_message(recipient_id, response_sent_text)
+
     return "Message Processed"
 
 
@@ -46,7 +46,6 @@ def verify_fb_token(token_sent):
     if token_sent == VERIFY_TOKEN:
         return request.args.get("hub.challenge")
     return "Invalid verification token"
-
 
 #chooses a random message to send to the user
 def get_message():
