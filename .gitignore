@@ -1,2 +1,11 @@
 # Ignore secret keys
 secret.yaml
+
+# Extra Python files
+__pycache__/
+*.py[cod]
+
+# Ignore personal config files
+.vscode
+.DS_Store
+
