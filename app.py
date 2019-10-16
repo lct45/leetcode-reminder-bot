@@ -15,6 +15,7 @@ with open("secret.yaml") as secretFile:
     CLIENT_ACCESS_TOKEN =  secretDict["CLIENT_ACCESS_TOKEN"]
     PAGE_ACCESS_TOKEN = secretDict["PAGE_ACCESS_TOKEN"]
     VERIFY_TOKEN = secretDict["VERIFY_TOKEN"]
+    PSQL_LOGIN_CMD = secretDict["PSQL_LOGIN_CMD"]
 
 bot = Bot(PAGE_ACCESS_TOKEN) # PyMessenger Bot
 app = Flask(__name__) # Flask app
@@ -65,7 +66,7 @@ persistent_menu = {
         }
 bot.set_persistent_menu(persistent_menu)
 
-#We will receive messages that Facebook sends our bot at this endpoint 
+# Receive messages that Facebook sends chatbot at this endpoint 
 @app.route("/", methods=["GET", "POST"])
 def receive_message():
     if request.method == "GET": # Facebook requested verification token
