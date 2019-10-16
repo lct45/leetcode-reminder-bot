@@ -98,6 +98,16 @@ def received_postback(event):
         bot.send_text_message(sender_id, "Hello, we're going to make a 10Xer out of you!")
         image_path_list = [os.getcwd(), "images", "10Xer.png"]
         bot.send_image_url(sender_id,"https://i.imgur.com/D4JtitY.png")
+    elif payload == "pm_set_username":
+        pass
+    elif payload == "pm_set_daily_goal":
+        pass
+    elif payload == "pm_set_reminder":
+        pass
+    elif payload == "pm_disable_reminder":
+        pass
+    else:
+        print("Invalid payload: " + payload)
 
 def verify_fb_token(token_sent):
     #take token sent by facebook and verify it matches the verify token you sent
