@@ -3,7 +3,7 @@ import random
 import os
 from flask import Flask, request
 from pymessenger.bot import Bot
-from pg import pg
+from pg.pginstance import PgInstance
 
 """
 The follow variables must be specified in secret.yaml:
@@ -96,26 +96,23 @@ def received_postback(event):
     recipient_id = event["recipient"]["id"] # page's facebook ID
     payload = event["postback"]["payload"]
     
-    conn, curs, err = pg.Connect(PSQL_LOGIN_CMD)
-    if err != None:
-        raise err
+    db = PgInstance(PSQL_LOGIN_CMD, sender_id)
 
     if payload == "start": # Initial welcome message
         bot.send_text_message(sender_id, "Hello, we're going to make a 10Xer out of you!")
-        image_path_list = [os.getcwd(), "images", "10Xer.png"]
         bot.send_image_url(sender_id,"https://i.imgur.com/D4JtitY.png")
     elif payload == "pm_set_username":
-        pg.Set_username(curs)
+        db.Set_username()
     elif payload == "pm_set_daily_goal":
-        pg.Set_daily_goal(curs)
+        db.Set_daily_goal()
     elif payload == "pm_set_reminder":
-        pg.Set_reminder(curs)
+        db.Set_reminder()
     elif payload == "pm_disable_reminder":
-        pg.Disable_reminder(curs)
+        db.Disable_reminder()
     else:
         print("Invalid payload: " + payload)
 
-    pg.Disconnect(conn, curs)
+    db.Disconnect()
 
 def verify_fb_token(token_sent):
     #take token sent by facebook and verify it matches the verify token you sent
