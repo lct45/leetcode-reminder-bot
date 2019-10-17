@@ -52,6 +52,7 @@ class PgInstance:
 
     Returns:
         str response that bot should relay to user, empty string ("") if nothing should be relayed
+        Exception if error from SQL query, else None
     """
     def Set_username(self):
         row = self.get_user_row()
@@ -60,13 +61,14 @@ class PgInstance:
         else:
             pass
 
-        return ""
+        return "", None
 
     """
     Set daily goal for LeetCode question bodycount for FB user
 
     Returns:
         str response that bot should relay to user, empty string ("") if nothing should be relayed
+        Exception if error from SQL query, else None
     """
     def Set_daily_goal(self):
         row = self.get_user_row()
@@ -75,13 +77,14 @@ class PgInstance:
         else:
             pass
 
-        return ""
+        return "", None
 
     """
     Set time for reminder for FB user
 
     Returns:
         str response that bot should relay to user, empty string ("") if nothing should be relayed
+        Exception if error from SQL query, else None
     """
     def Set_reminder(self):
         row = self.get_user_row()
@@ -90,34 +93,37 @@ class PgInstance:
         else:
             pass
 
-        return ""
+        return "", None
 
     """
     Check daily goal for FB user
 
     Returns:
         str response that bot should relay to user, empty string ("") if nothing should be relayed
+        Exception if error from SQL query, else None
     """
     def Check_daily_goal(self):
         row = self.get_user_row()
         if row == None:
-            pass
+            "You haven't set a reminder yet!"
         else:
             pass
 
-        return ""
+        return "", None
 
     """
     Disable reminder for FB user
 
     Returns:
         str response that bot should relay to user, empty string ("") if nothing should be relayed
+        Exception if error from SQL query, else None
     """
     def Disable_reminder(self):
         row = self.get_user_row()
         if row == None:
-            return "No reminder has been set!"
+            return "You haven't set a reminder yet!"
         else:
             pass
 
-        return ""
+        return "", None
+            

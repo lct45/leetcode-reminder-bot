@@ -88,8 +88,6 @@ def endpoint():
                 received_text(message)
             elif message.get("postback"): # Got message
                 received_postback(message)
-            else: # Change this behavior in the future, as it's the same as receiving text msg
-                received_text(message)
     return "Message Processed"
 
 """
@@ -102,7 +100,7 @@ def received_text(event):
     sender_id = event["sender"]["id"] # the FB ID of the person sending the message
     recipient_id = event["recipient"]["id"] # page's facebook ID
     text = event["message"]["text"]
-    
+   
     bot.send_text_message(sender_id, "Please use one of the options to communicate with me!")
 
 """
@@ -135,20 +133,27 @@ def received_postback(event):
         if err == None: # Successful connection
             db_response = None
             if payload == "pm_set_username":
-                db_response = db.Set_username()
+                db_response, err = db.Set_username()
             elif payload == "pm_set_reminder":
-                db_response = db.Set_reminder()
+                db_response, err = db.Set_reminder()
             elif payload == "pm_set_daily_goal":
-                db_response = db.Set_daily_goal()
+                db_response, err = db.Set_daily_goal()
             elif payload == "pm_check_daily_goal":
-                db_response = db.Check_daily_goal()
+                db_response, err = db.Check_daily_goal()
             elif payload == "pm_disable_reminder":
-                db_response = db.Disable_reminder()
+                db_response, err = db.Disable_reminder()
             else:
                 print("Invalid payload: " + payload)
+            
+            # Check for err from SQL query
+            if err != None:
+                raise err
+
+            # Disconnect from db
             err = db.Disconnect()
             if err != None:
                 raise err
+            
             # Send db query response to user
             if db_response != "":
                 bot.send_text_message(sender_id, db_response)
