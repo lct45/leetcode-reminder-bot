@@ -66,6 +66,7 @@ persistent_menu = {
             ]
         }
 bot.set_persistent_menu(persistent_menu)
+TEXT_FOLLOW_UP_DICT = {}
 
 """
 Handles GET and POST requests to Flask endpoint.
@@ -91,7 +92,11 @@ def endpoint():
     return "Message Processed"
 
 """
-Responds to user to communicate with one of the postback options.
+If followUp is none, responds to user to communicate with one of the postback options, else perform TEXT_FOLLOW_UP_DICT[sender_id] action from the following:
+    1. Set LeetCode username
+    2. Set daily goal for questions to complete
+    3. Set time to remind
+    4. Disable reminder
 
 Args:
     event: Nested dictionary that contains Facebook user ID, chatbot page's ID, and message that was sent
@@ -101,16 +106,45 @@ def received_text(event):
     recipient_id = event["recipient"]["id"] # page's facebook ID
     text = event["message"]["text"]
    
-    bot.send_text_message(sender_id, "Please use one of the options to communicate with me!")
+    follow_up = TEXT_FOLLOW_UP_DICT[sender_id]
+    if follow_up == None:
+        bot.send_text_message(sender_id, "Please use one of the options to communicate with me!")
+    else:
+        del TEXT_FOLLOW_UP_DICT[sender_id]
+        # Connect to db
+        db = PgInstance(PSQL_LOGIN_CMD, sender_id)
+        err = db.Connect()
+        if err == None: # Successful connection
+            db_response = None
+            if follow_up == "pm_set_username":
+                db_response, err = db.Set_username(text)
+            elif follow_up == "pm_set_reminder":
+                db_response, err = db.Set_reminder(text)
+            elif follow_up == "pm_set_daily_goal":
+                db_response, err = db.Set_daily_goal(text)
+            elif follow_up == "pm_check_daily_goal":
+                db_response, err = db.Check_daily_goal(text)
+            elif follow_up == "pm_disable_reminder":
+                db_response, err = db.Disable_reminder(text)
+            else:
+                print("Invalid follow-up: " + follow_up)
+            
+            # Check for err from SQL query
+            if err != None:
+                raise err
+
+            # Disconnect from db
+            err = db.Disconnect()
+            if err != None:
+                raise err
+            
+            # Send db query response to user
+            if db_response != "":
+                bot.send_text_message(sender_id, db_response)
 
 """
-Responds to user either the welcome message or responds to postback response from the persistent menu.
-Through the persistent menu, users are able to do the following with postback responses, which are logged in the PSQL db:
-    1. Set LeetCode username
-    2. Set daily goal for questions to complete
-    3. Set time to remind
-    4. Disable reminder
-
+Responds to user either the welcome message or responds to postback response from the persistent menu and sets TEXT_FOLLOW_UP_DICT[sender_id] to alter received_text() behavior
+   
 Args:
     event: Nested dictionary that contains Facebook user ID, chatbot page's ID, and message that was sent
 
@@ -126,42 +160,11 @@ def received_postback(event):
         bot.send_text_message(sender_id, "Hello, we're going to make a 10Xer out of you!")
         bot.send_image_url(sender_id,"https://i.imgur.com/D4JtitY.png")
         bot.send_text_message(sender_id, "To get started, set your LeetCode username, daily goal for questions you plan on completing, and the time of day to remind you!")
-    else: # Persistent menu
-        # Connect to db
-        db = PgInstance(PSQL_LOGIN_CMD, sender_id)
-        err = db.Connect()
-        if err == None: # Successful connection
-            db_response = None
-            if payload == "pm_set_username":
-                db_response, err = db.Set_username()
-            elif payload == "pm_set_reminder":
-                db_response, err = db.Set_reminder()
-            elif payload == "pm_set_daily_goal":
-                db_response, err = db.Set_daily_goal()
-            elif payload == "pm_check_daily_goal":
-                db_response, err = db.Check_daily_goal()
-            elif payload == "pm_disable_reminder":
-                db_response, err = db.Disable_reminder()
-            else:
-                print("Invalid payload: " + payload)
-            
-            # Check for err from SQL query
-            if err != None:
-                raise err
-
-            # Disconnect from db
-            err = db.Disconnect()
-            if err != None:
-                raise err
-            
-            # Send db query response to user
-            if db_response != "":
-                bot.send_text_message(sender_id, db_response)
-        else: # Unsuccessful connection
-            bot.send_text_message(sender_id, "Uh-oh, my database is currently down! Take a break and go outside for a change!")
-            print(err)
-
-
+    elif payload.split("_")[0] == "pm":
+        TEXT_FOLLOW_UP_DICT[sender_id] = payload
+    else:
+        print("Invalid payload: " + payload)
+  
 """
 Compare verification token set in the Facebook API against VERIFY_TOKEN variable from secret.yaml
 

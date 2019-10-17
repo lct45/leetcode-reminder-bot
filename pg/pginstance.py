@@ -50,12 +50,16 @@ class PgInstance:
     """
     Set LeetCode username for user
 
+    Args:
+        text: Raw message sent by user to chatbot
+
     Returns:
         str response that bot should relay to user, empty string ("") if nothing should be relayed
         Exception if error from SQL query, else None
     """
-    def Set_username(self):
+    def Set_username(self, text):
         row = self.get_user_row()
+        self.curs.execute("")
         if row == None:
             pass
         else:
@@ -66,11 +70,14 @@ class PgInstance:
     """
     Set daily goal for LeetCode question bodycount for FB user
 
+    Args:
+        text: Raw message sent by user to chatbot
+
     Returns:
         str response that bot should relay to user, empty string ("") if nothing should be relayed
         Exception if error from SQL query, else None
     """
-    def Set_daily_goal(self):
+    def Set_daily_goal(self, text):
         row = self.get_user_row()
         if row == None:
             pass
@@ -82,11 +89,14 @@ class PgInstance:
     """
     Set time for reminder for FB user
 
+    Args:
+        text: Raw message sent by user to chatbot
+
     Returns:
         str response that bot should relay to user, empty string ("") if nothing should be relayed
         Exception if error from SQL query, else None
     """
-    def Set_reminder(self):
+    def Set_reminder(self, text):
         row = self.get_user_row()
         if row == None:
             pass
@@ -98,11 +108,14 @@ class PgInstance:
     """
     Check daily goal for FB user
 
+    Args:
+        text: Raw message sent by user to chatbot
+
     Returns:
         str response that bot should relay to user, empty string ("") if nothing should be relayed
         Exception if error from SQL query, else None
     """
-    def Check_daily_goal(self):
+    def Check_daily_goal(self, text):
         row = self.get_user_row()
         if row == None:
             "You haven't set a reminder yet!"
@@ -114,11 +127,14 @@ class PgInstance:
     """
     Disable reminder for FB user
 
+    Args:
+        text: Raw message sent by user to chatbot
+
     Returns:
         str response that bot should relay to user, empty string ("") if nothing should be relayed
         Exception if error from SQL query, else None
     """
-    def Disable_reminder(self):
+    def Disable_reminder(self, text):
         row = self.get_user_row()
         if row == None:
             return "You haven't set a reminder yet!"
