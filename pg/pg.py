@@ -1,21 +1,27 @@
 import psycopg2
 
-# Establish command to db
-def connect(PSQL_LOGIN_CMD):
-    conn = None
+# Establish connection to db
+def Connect(PSQL_LOGIN_CMD):
     try:
-        print("connecting")
         conn = psycopg2.connect(PSQL_LOGIN_CMD)
-      
-        # create a cursor
-        cur = conn.cursor()
-        
-        cur.execute("")
- 
-        cur.close()
-    except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
-    finally:
-        if conn is not None:
-            conn.close()
-            print("connectiong closed")
+        curs = conn.cursor()
+        return conn, curs, None
+    except Exception as e:
+        return None, None, e
+
+# Disconnect from db
+def Disconnect(conn, curs):
+    curs.close()
+    conn.close()
+
+def Set_username(curs):
+    curs.execute()
+
+def Set_daily_goal(curs):
+    curs.execute()
+
+def Set_reminder(curs):
+    curs.execute()
+
+def Disable_reminder(curs):
+    curs.execute()
