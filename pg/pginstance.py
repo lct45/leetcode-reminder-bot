@@ -15,12 +15,14 @@ class PgInstance:
             self.conn = psycopg2.connect(self.PSQL_LOGIN_CMD)
             self.curs = self.conn.cursor(cursor_factory = psycopg2.extras.NamedTupleCursor)
         except Exception as e:
-            raise e
+            return e
 
     # Disconnect from db
     def Disconnect(self,):
         self.curs.close()
+        self.curs = None
         self.conn.close()
+        self.conn = None
 
     def get_user_row(self):
         self.curs.execute("SELECT * FROM reminders WHERE fb_id=%s", (self.fb_id,))

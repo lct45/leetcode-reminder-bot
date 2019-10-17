@@ -96,23 +96,27 @@ def received_postback(event):
     recipient_id = event["recipient"]["id"] # page's facebook ID
     payload = event["postback"]["payload"]
     
-    db = PgInstance(PSQL_LOGIN_CMD, sender_id)
-
     if payload == "start": # Initial welcome message
         bot.send_text_message(sender_id, "Hello, we're going to make a 10Xer out of you!")
         bot.send_image_url(sender_id,"https://i.imgur.com/D4JtitY.png")
-    elif payload == "pm_set_username":
-        db.Set_username()
-    elif payload == "pm_set_daily_goal":
-        db.Set_daily_goal()
-    elif payload == "pm_set_reminder":
-        db.Set_reminder()
-    elif payload == "pm_disable_reminder":
-        db.Disable_reminder()
-    else:
-        print("Invalid payload: " + payload)
-
-    db.Disconnect()
+    else: # Persistent menu
+        db = PgInstance(PSQL_LOGIN_CMD, sender_id)
+        err = db.Connect()
+        if err == None:
+            if payload == "pm_set_username":
+                db.Set_username()
+            elif payload == "pm_set_daily_goal":
+                db.Set_daily_goal()
+            elif payload == "pm_set_reminder":
+                db.Set_reminder()
+            elif payload == "pm_disable_reminder":
+                db.Disable_reminder()
+            else:
+                print("Invalid payload: " + payload)
+            db.Disconnect()
+        else:
+            bot.send_text_message(sender_id, "Uh-oh, my database is currently down! Take a break and go outside for a change!")
+            print(err)
 
 def verify_fb_token(token_sent):
     #take token sent by facebook and verify it matches the verify token you sent
