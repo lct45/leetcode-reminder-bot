@@ -43,24 +43,75 @@ class PgInstance:
 
     """
     Set LeetCode username for user
+
+    Returns:
+        str response that bot should relay to user, empty string ("") if nothing should be relayed
     """
     def Set_username(self):
-        pass
+        row = self.get_user_row()
+        if row == None:
+            pass
+        else:
+            pass
+
+        return ""
 
     """
     Set daily goal for LeetCode question bodycount for user
+
+    Returns:
+        str response that bot should relay to user, empty string ("") if nothing should be relayed
     """
     def Set_daily_goal(self):
-        pass
+        row = self.get_user_row()
+        if row == None:
+            pass
+        else:
+            pass
+
+        return ""
 
     """
     Set time for reminder for user
+
+    Returns:
+        str response that bot should relay to user, empty string ("") if nothing should be relayed
     """
     def Set_reminder(self):
-        pass
+        row = self.get_user_row()
+        if row == None:
+            pass
+        else:
+            pass
+
+        return ""
+
+    """
+    Check daily goal for user
+
+    Returns:
+        str response that bot should relay to user, empty string ("") if nothing should be relayed
+    """
+    def Check_daily_goal(self):
+        row = self.get_user_row()
+        if row == None:
+            pass
+        else:
+            pass
+
+        return ""
 
     """
     Disable reminder for user
+
+    Returns:
+        str response that bot should relay to user, empty string ("") if nothing should be relayed
     """
     def Disable_reminder(self):
-        pass
+        row = self.get_user_row()
+        if row == None:
+            return "No reminder has been set!"
+        else:
+            pass
+
+        return ""

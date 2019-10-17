@@ -44,13 +44,18 @@ persistent_menu = {
                         },
                         {
                             "type": "postback",
+                            "title": "Set reminder",
+                            "payload": "pm_set_reminder"
+                        },
+                        {
+                            "type": "postback",
                             "title": "Set daily goal",
                             "payload": "pm_set_daily_goal"
                         },
                         {
                             "type": "postback",
-                            "title": "Set reminder",
-                            "payload": "pm_set_reminder"
+                            "title": "Check daily goal",
+                            "payload": "pm_check_daily_goal"
                         },
                         {
                             "type": "postback",
@@ -123,21 +128,28 @@ def received_postback(event):
     if payload == "start": # Initial welcome message for first-time users
         bot.send_text_message(sender_id, "Hello, we're going to make a 10Xer out of you!")
         bot.send_image_url(sender_id,"https://i.imgur.com/D4JtitY.png")
+        bot.send_text_message(sender_id, "To get started, set your LeetCode username, daily goal for questions you plan on completing, and the time of day to remind you!")
     else: # Persistent menu
         db = PgInstance(PSQL_LOGIN_CMD, sender_id)
         err = db.Connect()
         if err == None:
+            db_response = None
             if payload == "pm_set_username":
-                db.Set_username()
-            elif payload == "pm_set_daily_goal":
-                db.Set_daily_goal()
+                db_response = db.Set_username()
             elif payload == "pm_set_reminder":
-                db.Set_reminder()
+                db_response = db.Set_reminder()
+            elif payload == "pm_set_daily_goal":
+                db_response = db.Set_daily_goal()
+            elif payload == "pm_check_daily_goal":
+                db_response = db.Check_daily_goal()
             elif payload == "pm_disable_reminder":
-                db.Disable_reminder()
+                db_response = db.Disable_reminder()
             else:
                 print("Invalid payload: " + payload)
             db.Disconnect()
+            if db_response != "":
+                bot.send_text_message(sender_id, db_response)
+
         else:
             bot.send_text_message(sender_id, "Uh-oh, my database is currently down! Take a break and go outside for a change!")
             print(err)
