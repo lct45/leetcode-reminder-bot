@@ -5,36 +5,32 @@ from flask import Flask, request
 from pymessenger.bot import Bot
 from pg.pginstance import PgInstance
 
-"""
-The follow variables must be specified in secret.yaml:
-CLIENT_ACCESS_TOKEN: Client access token from DialogFlow
-PAGE_ACCESS_TOKEN: Facebook page access token
-VERIFY_TOKEN: Verification token for Facebook chatbot
-"""
+# Load variables from secret.yaml
 with open("secret.yaml") as secretFile:
     secretDict = yaml.load(secretFile,  Loader=yaml.BaseLoader)
-    CLIENT_ACCESS_TOKEN =  secretDict["CLIENT_ACCESS_TOKEN"]
-    PAGE_ACCESS_TOKEN = secretDict["PAGE_ACCESS_TOKEN"]
-    VERIFY_TOKEN = secretDict["VERIFY_TOKEN"]
-    PSQL_LOGIN_CMD = secretDict["PSQL_LOGIN_CMD"]
+    PAGE_ACCESS_TOKEN = secretDict["PAGE_ACCESS_TOKEN"] # Facebook page access token
+    VERIFY_TOKEN = secretDict["VERIFY_TOKEN"] # Verification token for Facebook chatbot
+    PSQL_LOGIN_CMD = secretDict["PSQL_LOGIN_CMD"] # PSQL command to execute to login to database
 
-bot = Bot(PAGE_ACCESS_TOKEN) # PyMessenger Bot
-app = Flask(__name__) # Flask app
+bot = Bot(PAGE_ACCESS_TOKEN) # Initialize PyMessenger Bot
+app = Flask(__name__) # Initialize Flask app
 
-# Sent if first time user is using bot
-greeting =  {"greeting":[ #Greetings 
+# Sent if first time user is using bot, check is handled by FB API rather than our end
+greeting =  {"greeting":[ # Greeting text
         {
         "locale":"default",
         "text":"We're going to make a 10Xer out of you, {{user_first_name}}!"
         }
     ]}
 bot.set_greeting(greeting)
-gs = { #Get started button
+gs = { # Get started button
             "get_started":{
             "payload":"start"
             }
     }
 bot.set_get_started(gs)
+
+# Response options that persist during entire chat
 persistent_menu = {
             "persistent_menu": [
                 {
@@ -67,9 +63,15 @@ persistent_menu = {
         }
 bot.set_persistent_menu(persistent_menu)
 
-# Receive messages that Facebook sends chatbot at this endpoint 
+"""
+Handles GET and POST requests to Flask endpoint.
+
+Requests:
+    GET: Facebook API is asking for verification, verify Facebook verification token against VERIFY_TOKEN variable
+    POST: User sent a message, handle either text or postback response
+"""
 @app.route("/", methods=["GET", "POST"])
-def receive_message():
+def endpoint():
     if request.method == "GET": # Facebook requested verification token
         token_sent = request.args.get("hub.verify_token")
         return verify_fb_token(token_sent)
@@ -78,12 +80,20 @@ def receive_message():
        for event in output["entry"]:
           messaging = event["messaging"]
           for message in messaging:
-            if message.get("message"):
+            if message.get("message"): # Got text
                 received_text(message)
-            elif message.get("postback"):
+            elif message.get("postback"): # Got message
                 received_postback(message)
+            else: # Change this behavior in the future, as it's the same as receiving text msg
+                received_text(message)
     return "Message Processed"
 
+"""
+Responds to user to communicate with one of the postback options.
+
+Args:
+    event: Nested dictionary that contains Facebook user ID, chatbot page's ID, and message that was sent
+"""
 def received_text(event):
     sender_id = event["sender"]["id"] # the FB ID of the person sending the message
     recipient_id = event["recipient"]["id"] # page's facebook ID
@@ -91,12 +101,26 @@ def received_text(event):
     
     bot.send_text_message(sender_id, "Please use one of the options to communicate with me!")
 
+"""
+Responds to user either the welcome message or responds to postback response from the persistent menu.
+Through the persistent menu, users are able to do the following with postback responses, which are logged in the PSQL db:
+    1. Set LeetCode username
+    2. Set daily goal for questions to complete
+    3. Set time to remind
+    4. Disable reminder
+
+Args:
+    event: Nested dictionary that contains Facebook user ID, chatbot page's ID, and message that was sent
+
+Documentation:
+    Postbacks: https://developers.facebook.com/docs/messenger-platform/reference/webhook-events/messaging_postbacks
+"""
 def received_postback(event):
     sender_id = event["sender"]["id"] # the FB ID of the person sending the message
     recipient_id = event["recipient"]["id"] # page's facebook ID
     payload = event["postback"]["payload"]
     
-    if payload == "start": # Initial welcome message
+    if payload == "start": # Initial welcome message for first-time users
         bot.send_text_message(sender_id, "Hello, we're going to make a 10Xer out of you!")
         bot.send_image_url(sender_id,"https://i.imgur.com/D4JtitY.png")
     else: # Persistent menu
@@ -118,6 +142,16 @@ def received_postback(event):
             bot.send_text_message(sender_id, "Uh-oh, my database is currently down! Take a break and go outside for a change!")
             print(err)
 
+
+"""
+Compare verification token set in the Facebook API against VERIFY_TOKEN variable from secret.yaml
+
+Args:
+    VERIFY_TOKEN: Local copy of verification token
+
+Returns:
+    string response whether VERIFY_TOKEN == FB verification token
+"""
 def verify_fb_token(token_sent):
     #take token sent by facebook and verify it matches the verify token you sent
     #if they match, allow the request, else return an error 
