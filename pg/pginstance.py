@@ -13,7 +13,7 @@ class PgInstance:
     Open connection and initialize cursor for PSQL database
 
     Returns:
-        connection object and database cursor object
+        connection object and database cursor object, or error if connection failed
     """
     def Connect(self):
         try:
@@ -24,12 +24,18 @@ class PgInstance:
 
     """
     Close cursor and connection to PSQL database
+
+    Returns:
+        None if successful disconnection, else Exception
     """
     def Disconnect(self,):
+        if self.conn == None or self.curs == None:
+            return Exception("No connection or cursor to disconnect from.")
         self.curs.close()
         self.curs = None
         self.conn.close()
         self.conn = None
+        return None
 
     """
     Get row by Facebook user ID
@@ -57,7 +63,7 @@ class PgInstance:
         return ""
 
     """
-    Set daily goal for LeetCode question bodycount for user
+    Set daily goal for LeetCode question bodycount for FB user
 
     Returns:
         str response that bot should relay to user, empty string ("") if nothing should be relayed
@@ -72,7 +78,7 @@ class PgInstance:
         return ""
 
     """
-    Set time for reminder for user
+    Set time for reminder for FB user
 
     Returns:
         str response that bot should relay to user, empty string ("") if nothing should be relayed
@@ -87,7 +93,7 @@ class PgInstance:
         return ""
 
     """
-    Check daily goal for user
+    Check daily goal for FB user
 
     Returns:
         str response that bot should relay to user, empty string ("") if nothing should be relayed
@@ -102,7 +108,7 @@ class PgInstance:
         return ""
 
     """
-    Disable reminder for user
+    Disable reminder for FB user
 
     Returns:
         str response that bot should relay to user, empty string ("") if nothing should be relayed

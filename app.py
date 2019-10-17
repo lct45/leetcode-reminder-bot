@@ -1,6 +1,5 @@
 import yaml
 import random
-import os
 from flask import Flask, request
 from pymessenger.bot import Bot
 from pg.pginstance import PgInstance
@@ -130,9 +129,10 @@ def received_postback(event):
         bot.send_image_url(sender_id,"https://i.imgur.com/D4JtitY.png")
         bot.send_text_message(sender_id, "To get started, set your LeetCode username, daily goal for questions you plan on completing, and the time of day to remind you!")
     else: # Persistent menu
+        # Connect to db
         db = PgInstance(PSQL_LOGIN_CMD, sender_id)
         err = db.Connect()
-        if err == None:
+        if err == None: # Successful connection
             db_response = None
             if payload == "pm_set_username":
                 db_response = db.Set_username()
@@ -146,11 +146,13 @@ def received_postback(event):
                 db_response = db.Disable_reminder()
             else:
                 print("Invalid payload: " + payload)
-            db.Disconnect()
+            err = db.Disconnect()
+            if err != None:
+                raise err
+            # Send db query response to user
             if db_response != "":
                 bot.send_text_message(sender_id, db_response)
-
-        else:
+        else: # Unsuccessful connection
             bot.send_text_message(sender_id, "Uh-oh, my database is currently down! Take a break and go outside for a change!")
             print(err)
 
