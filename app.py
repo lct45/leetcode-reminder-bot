@@ -21,7 +21,7 @@ greeting =  {"greeting":[ # Greeting text
         "text":"We're going to make a 10Xer out of you, {{user_first_name}}!"
         }
     ]}
-bot.set_greeting(greeting)
+bot.set_get_started(greeting)
 gs = { # Get started button
             "get_started":{
             "payload":"start"
