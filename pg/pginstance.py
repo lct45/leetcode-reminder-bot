@@ -108,14 +108,11 @@ class PgInstance:
     """
     Check daily goal for FB user
 
-    Args:
-        text: Raw message sent by user to chatbot
-
     Returns:
         str response that bot should relay to user, empty string ("") if nothing should be relayed
         Exception if error from SQL query, else None
     """
-    def Check_daily_goal(self, text):
+    def Check_daily_goal(self):
         row = self.get_user_row()
         if row == None:
             "You haven't set a reminder yet!"
@@ -127,14 +124,11 @@ class PgInstance:
     """
     Disable reminder for FB user
 
-    Args:
-        text: Raw message sent by user to chatbot
-
     Returns:
         str response that bot should relay to user, empty string ("") if nothing should be relayed
         Exception if error from SQL query, else None
     """
-    def Disable_reminder(self, text):
+    def Disable_reminder(self):
         row = self.get_user_row()
         if row == None:
             return "You haven't set a reminder yet!"

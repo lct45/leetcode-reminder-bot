@@ -122,25 +122,23 @@ def received_text(event):
                 db_response, err = db.Set_reminder(text)
             elif follow_up == "pm_set_daily_goal":
                 db_response, err = db.Set_daily_goal(text)
-            elif follow_up == "pm_check_daily_goal":
-                db_response, err = db.Check_daily_goal(text)
-            elif follow_up == "pm_disable_reminder":
-                db_response, err = db.Disable_reminder(text)
-            else:
+            else: # To-do add logging
                 print("Invalid follow-up: " + follow_up)
             
             # Check for err from SQL query
             if err != None:
-                raise err
+                print(err)
 
             # Disconnect from db
             err = db.Disconnect()
             if err != None:
-                raise err
+                print(err)
             
             # Send db query response to user
             if db_response != "":
                 bot.send_text_message(sender_id, db_response)
+        else:
+            print(err)
 
 """
 Responds to user either the welcome message or responds to postback response from the persistent menu and sets TEXT_FOLLOW_UP_DICT[sender_id] to alter received_text() behavior
@@ -160,9 +158,38 @@ def received_postback(event):
         bot.send_text_message(sender_id, "Hello, we're going to make a 10Xer out of you!")
         bot.send_image_url(sender_id,"https://i.imgur.com/D4JtitY.png")
         bot.send_text_message(sender_id, "To get started, set your LeetCode username, daily goal for questions you plan on completing, and the time of day to remind you!")
-    elif payload.split("_")[0] == "pm":
-        TEXT_FOLLOW_UP_DICT[sender_id] = payload
-    else:
+    elif payload.split("_")[0] == "pm": # persistent menu postback
+        if payload.split("_")[1] == "set": # set commands require a text follow-up
+            TEXT_FOLLOW_UP_DICT[sender_id] = payload
+        else:
+            # Connect to db
+            db = PgInstance(PSQL_LOGIN_CMD, sender_id)
+            err = db.Connect()
+            if err == None: # Successful connection
+                db_response = None
+                if payload == "pm_check_daily_goal":
+                    db_response, err = db.Check_daily_goal()
+                elif payload == "pm_disable_reminder":
+                    db_response, err = db.Disable_reminder()
+                else: # To-do add logging
+                    print("Invalid payload: " + payload)
+                
+                # Check for err from SQL query
+                if err != None:
+                    print(err)
+
+                # Disconnect from db
+                err = db.Disconnect()
+                if err != None:
+                    print(err)
+                
+                 # Send db query response to user
+                if db_response != "":
+                    bot.send_text_message(sender_id, db_response)
+            else:
+                print(err)
+
+    else: # should never happen, should add logging for these cases
         print("Invalid payload: " + payload)
   
 """
