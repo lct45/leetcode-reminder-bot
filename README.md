@@ -81,4 +81,12 @@ We're going to fucking it run it now.
 4. Run `python3 app.py`.
 5. Open Facebook messenger from your phone. You can't do it from Desktop because you're an admin for the page and if you try to message the page, it just logs you in as the page. Message `Leetcode Reminder Bot` from your phone.
 
+### Saving changes
+
+Run `git add .` to add to current commit.
+
+Run `git commit -m "message describing change here"` to stage change.
+
+Run `git push` to push changes to GitHub.
+
 Holy shit we're done. Finish my side-project now, Leah!
