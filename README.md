@@ -71,4 +71,14 @@ In a nutshell, have you ever run something your personal laptop and had it work 
 3. Run `./seed-db.sh` to create the appropriate columns and rows in the database.
 4. Download http://www.psequel.com/. To connect to the database, `Host` should be `localhost`, `User` should be `admin`, `Password` should be `password`. `Database` should be `postgres`. `Port` should be `5433` `Use SSL`and `Use SSH Tunneling` should both be unchecked. Connect and take a look around.
 
+### Run them jewels fast, run them, run them jewels fast
+
+We're going to fucking it run it now.
+
+1. Make sure you have Python 3.6.8 installed.
+2. Go back to the root of the directory.
+3. Run `pip3 install -r requirements.txt` to install the requirements.
+4. Run `python3 app.py`.
+5. Open Facebook messenger from your phone. You can't do it from Desktop because you're an admin for the page and if you try to message the page, it just logs you in as the page. Message `Leetcode Reminder Bot` from your phone.
+
 Holy shit we're done. Finish my side-project now, Leah!
