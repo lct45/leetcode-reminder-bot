@@ -20,14 +20,28 @@ Navigate to the root directory for the project, `leetcode-reminder-bot`. Create 
 4. Now focusing on the center of the page, scroll down to the section titled `Access Tokens`.
 5. Hit `Generate Token`. In `secret.yaml`, for `PAGE_ACCESS_TOKEN: Get_From_FB_API` replace `Get_From_FB_API` with the token. Don't close this page, we'll return to it shortly.
 
-#### `ngrok`
+#### `ngrok` Part 1 / 2
 
 1. Download `ngrok` from https://ngrok.com/download.
-2. Open a separate terminal window and navigate to where the `ngrok` program is. Run `./ngrok http 5000`, which will run `ngrok` continuously, so don't close this terminal during the duration of testing.
-3. The output should expose a URL, for example `Forwarding http://d59cf242.ngrok.io -> http://localhost:5000`. COPY THE `HTTPS` URL NOT THE `HTTP` URL (they're basically identical but only https will work).
-4. Go back to the FB Dev page you were on. Directly below the `Access Tokens` section should be the `Webhooks` section.
-5. Hit `Edit URL` and paste your exposed URL, such as `https://dbf2d510.ngrok.io` into the `Callback URL` field. In the `Verify Token` field, make up some token, e.g. `AndrewLiIsBetterThanAndrewDing`. Save.
-6. In `secret.yaml`, for `VERIFY_TOKEN: Made_Up_Phrase_You_Set_In_The_FB_API_When_You_Set_Your_Endpoint`, replace the filler string with your token.
+2. Open a separate terminal window and navigate to where the `ngrok` program is. Run `./ngrok http 5000`, which will run `ngrok` continuously. We'll return to this after the next section.
+
+#### Run them jewels fast, run them, run them jewels fast
+
+We're going to fucking it run it now.
+
+1. Make sure you have Python 3.6.8 installed.
+2. Go back to the root of the directory.
+3. Run `pip3 install -r requirements.txt` to install the requirements.
+4. Run `python3 app.py`.
+
+Leave it running in the background
+
+#### `ngrok` Part 2 / 2
+
+1. In `secret.yaml`, for `VERIFY_TOKEN: Made_Up_Phrase_You_Set_In_The_FB_API_When_You_Set_Your_Endpoint`, replace the filler string with your token.
+2. Go back to the terminal running `ngrok`. The output should expose a URL, for example `Forwarding http://d59cf242.ngrok.io -> http://localhost:5000`. COPY THE `HTTPS` URL NOT THE `HTTP` URL (they're basically identical but only https will work).
+3. Go back to the FB Dev page you were on. Directly below the `Access Tokens` section should be the `Webhooks` section.
+4. Hit `Edit URL` and paste your exposed URL, such as `https://dbf2d510.ngrok.io` into the `Callback URL` field. In the `Verify Token` field, make up some token, e.g. `AndrewLiIsBetterThanAndrewDing`. Save.
 
 What's happening here is you're exposing an IP, which should be `5000` (remember `http://localhost:5000` from the `ngrok` output?) by default, for external access, however this is IP is local and can only be used internally on your computer. `ngrok` forwards or maps that IP to a random URL owned by their company, such as `http://d59cf242.ngrok.io`, which can be accessed externally by people, such as Facebook.
 
@@ -71,15 +85,9 @@ In a nutshell, have you ever run something your personal laptop and had it work 
 3. Run `./seed-db.sh` to create the appropriate columns and rows in the database.
 4. Download http://www.psequel.com/. To connect to the database, `Host` should be `localhost`, `User` should be `admin`, `Password` should be `password`. `Database` should be `postgres`. `Port` should be `5433` `Use SSL`and `Use SSH Tunneling` should both be unchecked. Connect and take a look around.
 
-### Run them jewels fast, run them, run them jewels fast
+#### Testing
 
-We're going to fucking it run it now.
-
-1. Make sure you have Python 3.6.8 installed.
-2. Go back to the root of the directory.
-3. Run `pip3 install -r requirements.txt` to install the requirements.
-4. Run `python3 app.py`.
-5. Open Facebook messenger from your phone. You can't do it from Desktop because you're an admin for the page and if you try to message the page, it just logs you in as the page. Message `Leetcode Reminder Bot` from your phone.
+Open Facebook messenger from your phone. You can't do it from the desktop version because you're an admin for the page and if you try to message the page, it just logs you in as the page. Message `Leetcode Reminder Bot` from your phone.
 
 ### Saving changes
 
