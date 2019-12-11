@@ -38,10 +38,10 @@ Leave it running in the background
 
 #### `ngrok` Part 2 / 2
 
-1. In `secret.yaml`, for `VERIFY_TOKEN: Made_Up_Phrase_You_Set_In_The_FB_API_When_You_Set_Your_Endpoint`, replace the filler string with your token.
+1. In `secret.yaml`, for `VERIFY_TOKEN: Made_Up_Phrase_You_Set_In_The_FB_API_When_You_Set_Your_Endpoint`, replace the filler string with some made up token, e.g. `AndrewLiIsBetterThanAndrewDing`.
 2. Go back to the terminal running `ngrok`. The output should expose a URL, for example `Forwarding http://d59cf242.ngrok.io -> http://localhost:5000`. COPY THE `HTTPS` URL NOT THE `HTTP` URL (they're basically identical but only https will work).
 3. Go back to the FB Dev page you were on. Directly below the `Access Tokens` section should be the `Webhooks` section.
-4. Hit `Edit URL` and paste your exposed URL, such as `https://dbf2d510.ngrok.io` into the `Callback URL` field. In the `Verify Token` field, make up some token, e.g. `AndrewLiIsBetterThanAndrewDing`. Save.
+4. Hit `Edit URL` and paste your exposed URL, such as `https://dbf2d510.ngrok.io` into the `Callback URL` field. In the `Verify Token` field, paste the token you mae up earlier. Save.
 
 What's happening here is you're exposing an IP, which should be `5000` (remember `http://localhost:5000` from the `ngrok` output?) by default, for external access, however this is IP is local and can only be used internally on your computer. `ngrok` forwards or maps that IP to a random URL owned by their company, such as `http://d59cf242.ngrok.io`, which can be accessed externally by people, such as Facebook.
 
