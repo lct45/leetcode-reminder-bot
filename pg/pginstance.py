@@ -70,12 +70,12 @@ class PgInstance:
         row = self.get_user_row()
         if row == None:  # New user
             self.curs.execute(
-                "INSERT INTO reminders (fb_id, leetcode_username) VALUES (%s, %s);", (self.fb_id, text))
+                "INSERT INTO reminders (fb_id, leetcode_username) VALUES (%s, %s)", (self.fb_id, text))
+            return "Username added.", None
         else:  # Overwrite username for existing user
             self.curs.execute(
                 "UPDATE reminders SET leetcode_username=%s WHERE fb_id=%s", (text, self.fb_id))
-
-        return "", None
+            return "Username updated.", None
 
     """
     Set daily goal for LeetCode question bodycount for FB user
@@ -91,11 +91,13 @@ class PgInstance:
     def Set_daily_goal(self, text):
         row = self.get_user_row()
         if row == None:
-            pass
+            self.curs.execute(
+                "INSERT INTO reminders (fb_id, daily_goal) VALUES (%s, %s)", (self.fb_id, text))
+            return "Daily goal set.", None
         else:
-            pass
-
-        return "", None
+            self.curs.execute(
+                "UPDATE reminders SET daily_goal=%s WHERE fb_id=%s", (text, self.fb_id))
+            return "Daily goal updated.", None
 
     """
     Set time for reminder for FB user
@@ -111,12 +113,13 @@ class PgInstance:
     def Set_reminder(self, text):
         row = self.get_user_row()
         if row == None:
-            pass
+            self.curs.execute(
+                "INSERT INTO reminders (fb_id, reminder_time) VALUES (%s, %s)", (self.fb_id, text))
+            return "Reminder set.", None
         else:
-            pass
-
-        return "", None
-
+            self.curs.execute(
+                "UPDATE reminders SET reminder_time=%s WHERE fb_id=%s", (text, self.fb_id))
+            return "Reminder updated.", None
     """
     Check daily goal for FB user
 
@@ -128,11 +131,13 @@ class PgInstance:
     def Check_daily_goal(self):
         row = self.get_user_row()
         if row == None:
-            "You haven't set a reminder yet!"
+            return "You haven't set a reminder yet!", None
         else:
-            pass
+            self.curs.execute(
+                "SELECT daily_goal FROM reminders WHERE fb_id=%s", (self.fb_id))
+            return self.curs.fetchone(), None
 
-        return "", None
+
 
     """
     Disable reminder for FB user
@@ -145,8 +150,8 @@ class PgInstance:
     def Disable_reminder(self):
         row = self.get_user_row()
         if row == None:
-            return "You haven't set a reminder yet!"
+            return "You haven't set a reminder yet!", None
         else:
-            pass
-
-        return "", None
+            self.curs.execute(
+                "UPDATE reminders SET reminder_time=NULL WHERE fb_id=%s", (self.fb_id))
+            return "Reminder disabled.", None

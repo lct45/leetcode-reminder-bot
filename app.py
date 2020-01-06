@@ -175,6 +175,8 @@ def received_postback(event):
     elif payload.split("_")[0] == "pm":  # persistent menu postback
         if payload.split("_")[1] == "set":  # set commands require a text follow-up
             TEXT_FOLLOW_UP_DICT[sender_id] = payload
+            bot.send_text_message(
+                sender_id, "Sounds good! Give me the information.")
         else:
             # Connect to db
             db = PgInstance(PSQL_LOGIN_CMD, sender_id)
