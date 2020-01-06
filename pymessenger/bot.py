@@ -27,7 +27,8 @@ class Bot:
 
         self.api_version = kwargs.get('api_version') or DEFAULT_API_VERSION
         self.app_secret = kwargs.get('app_secret')
-        self.graph_url = 'https://graph.facebook.com/v{0}'.format(self.api_version)
+        self.graph_url = 'https://graph.facebook.com/v{0}'.format(
+            self.api_version)
         self.access_token = access_token
 
     @property
@@ -37,7 +38,8 @@ class Bot:
                 'access_token': self.access_token
             }
             if self.app_secret is not None:
-                appsecret_proof = utils.generate_appsecret_proof(self.access_token, self.app_secret)
+                appsecret_proof = utils.generate_appsecret_proof(
+                    self.access_token, self.app_secret)
                 auth['appsecret_proof'] = appsecret_proof
             self._auth_args = auth
         return self._auth_args
@@ -314,8 +316,8 @@ class Bot:
         request_endpoint = '{0}/me/messenger_profile'.format(self.graph_url)
         response = requests.post(
             request_endpoint,
-            params = self.auth_args,
-            json = gs_obj
+            params=self.auth_args,
+            json=gs_obj
         )
         result = response.json()
         return result
@@ -331,65 +333,65 @@ class Bot:
         request_endpoint = '{0}/me/messenger_profile'.format(self.graph_url)
         response = requests.post(
             request_endpoint,
-            params = self.auth_args,
-            json = pm_obj
+            params=self.auth_args,
+            json=pm_obj
         )
         result = response.json()
         return result
 
     def remove_get_started(self):
-            """delete get started button.
-            https://developers.facebook.com/docs/messenger-platform/reference/messenger-profile-api/#delete
-            Output:
-            Response from API as <dict>
-            """
-            delete_obj = {"fields": ["get_started"]}
-            request_endpoint = '{0}/me/messenger_profile'.format(self.graph_url)
-            response = requests.delete(
-                request_endpoint,
-                params = self.auth_args,
-                json = delete_obj
-            )
-            result = response.json()
-            return result
+        """delete get started button.
+        https://developers.facebook.com/docs/messenger-platform/reference/messenger-profile-api/#delete
+        Output:
+        Response from API as <dict>
+        """
+        delete_obj = {"fields": ["get_started"]}
+        request_endpoint = '{0}/me/messenger_profile'.format(self.graph_url)
+        response = requests.delete(
+            request_endpoint,
+            params=self.auth_args,
+            json=delete_obj
+        )
+        result = response.json()
+        return result
 
     def remove_persistent_menu(self):
-            """delete persistent menu.
-            https://developers.facebook.com/docs/messenger-platform/reference/messenger-profile-api/#delete
-            Output:
-            Response from API as <dict>
-            """
-            delete_obj = {"fields": ["persistent_menu"]}
-            request_endpoint = '{0}/me/messenger_profile'.format(self.graph_url)
-            response = requests.delete(
-                request_endpoint,
-                params = self.auth_args,
-                json = delete_obj
-            )
-            result = response.json()
-            return result
-            
+        """delete persistent menu.
+        https://developers.facebook.com/docs/messenger-platform/reference/messenger-profile-api/#delete
+        Output:
+        Response from API as <dict>
+        """
+        delete_obj = {"fields": ["persistent_menu"]}
+        request_endpoint = '{0}/me/messenger_profile'.format(self.graph_url)
+        response = requests.delete(
+            request_endpoint,
+            params=self.auth_args,
+            json=delete_obj
+        )
+        result = response.json()
+        return result
+
     def send_text_quick_replies(self, recipient_id, listOfReplies, messageToReplyTo, listOfPayloads=[]):
         """
         Sends a list of text quick replies with an optional message to send before sending the quick replies
         Payload and Message are optional, however, if no payload for a specific reply (i.e. None) 
         or for all quick replies, the payload will be defined as the reply itself.
-        
-        
+
+
         https://developers.facebook.com/docs/messenger-platform/send-messages/quick-replies/#text
-        
+
         Output:
             Response from API as <dict>
         """
         quickRepliesList = []
 
         # If no payloads identified
-        if len(listOfPayloads) == 0:     
+        if len(listOfPayloads) == 0:
             for reply in listOfReplies:
                 quickRepliesList.append({
-                                        "content_type":"text",
-                                        "title":reply,
-                                        "payload":reply
+                                        "content_type": "text",
+                                        "title": reply,
+                                        "payload": reply
                                         })
 
         # If payloads is identified
@@ -398,27 +400,27 @@ class Bot:
                 # if some payload is not identified in the list
                 if payload == None:
                     quickRepliesList.append({
-                                            "content_type":"text",
-                                            "title":reply,
-                                            "payload":reply
+                                            "content_type": "text",
+                                            "title": reply,
+                                            "payload": reply
                                             })
                 if payload != None:
                     quickRepliesList.append({
-                                            "content_type":"text",
-                                            "title":reply,
-                                            "payload":payload
+                                            "content_type": "text",
+                                            "title": reply,
+                                            "payload": payload
                                             })
 
             # if the length of payloads is less than replies, then just let the payload for the rest to be just the reply
             if len(listOfPayloads) < len(listOfReplies):
                 for reply in listOfReplies[len(listOfPayloads):]:
                     quickRepliesList.append({
-                                            "content_type":"text",
-                                            "title":reply,
-                                            "payload":reply
+                                            "content_type": "text",
+                                            "title": reply,
+                                            "payload": reply
                                             })
 
-        return  self.send_message(recipient_id, {
-                "text": messageToReplyTo,
-                "quick_replies": quickRepliesList
-                })
+        return self.send_message(recipient_id, {
+            "text": messageToReplyTo,
+            "quick_replies": quickRepliesList
+        })

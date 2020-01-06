@@ -1,13 +1,16 @@
 import psycopg2
 import psycopg2.extras
 
+
 class PgInstance:
 
     def __init__(self, PSQL_LOGIN_CMD, fb_id):
-        self.PSQL_LOGIN_CMD = PSQL_LOGIN_CMD # Raw command used to login to PSQL database through psycopg2
+        # Raw command used to login to PSQL database through psycopg2
+        self.PSQL_LOGIN_CMD = PSQL_LOGIN_CMD
         self.fb_id = fb_id                   # Facebook user ID
         self.conn = None                     # Current connection object, None if no connection
-        self.curs = None                     # Current cursor object, None if no cursor/connection
+        # Current cursor object, None if no cursor/connection
+        self.curs = None
 
     """
     Open connection and initialize cursor for PSQL database
@@ -15,10 +18,12 @@ class PgInstance:
     Returns:
         connection object and database cursor object, or error if connection failed
     """
+
     def Connect(self):
         try:
             self.conn = psycopg2.connect(self.PSQL_LOGIN_CMD)
-            self.curs = self.conn.cursor(cursor_factory = psycopg2.extras.NamedTupleCursor)
+            self.curs = self.conn.cursor(
+                cursor_factory=psycopg2.extras.NamedTupleCursor)
         except Exception as e:
             return e
 
@@ -28,6 +33,7 @@ class PgInstance:
     Returns:
         None if successful disconnection, else Exception
     """
+
     def Disconnect(self,):
         if self.conn == None or self.curs == None:
             return Exception("No connection or cursor to disconnect from.")
@@ -43,9 +49,11 @@ class PgInstance:
     Returns:
         Named Tuple for row containing sender Facebook user ID
     """
+
     def get_user_row(self):
-        self.curs.execute("SELECT * FROM reminders WHERE fb_id=%s", (self.fb_id,))
-        return self.curs.fetchone() # We should never get more than one
+        self.curs.execute(
+            "SELECT * FROM reminders WHERE fb_id=%s", (self.fb_id,))
+        return self.curs.fetchone()  # We should never get more than one
 
     """
     Set LeetCode username for user
@@ -57,13 +65,15 @@ class PgInstance:
         str response that bot should relay to user, empty string ("") if nothing should be relayed
         Exception if error from SQL query, else None
     """
+
     def Set_username(self, text):
         row = self.get_user_row()
-        self.curs.execute("")
-        if row == None:
-            pass
-        else:
-            pass
+        if row == None:  # New user
+            self.curs.execute(
+                "INSERT INTO reminders (fb_id, leetcode_username) VALUES (%s, %s);", (self.fb_id, text))
+        else:  # Overwrite username for existing user
+            self.curs.execute(
+                "UPDATE reminders SET leetcode_username=%s WHERE fb_ib=%s", (text, self.fb_id))
 
         return "", None
 
@@ -77,6 +87,7 @@ class PgInstance:
         str response that bot should relay to user, empty string ("") if nothing should be relayed
         Exception if error from SQL query, else None
     """
+
     def Set_daily_goal(self, text):
         row = self.get_user_row()
         if row == None:
@@ -96,6 +107,7 @@ class PgInstance:
         str response that bot should relay to user, empty string ("") if nothing should be relayed
         Exception if error from SQL query, else None
     """
+
     def Set_reminder(self, text):
         row = self.get_user_row()
         if row == None:
@@ -112,6 +124,7 @@ class PgInstance:
         str response that bot should relay to user, empty string ("") if nothing should be relayed
         Exception if error from SQL query, else None
     """
+
     def Check_daily_goal(self):
         row = self.get_user_row()
         if row == None:
@@ -128,6 +141,7 @@ class PgInstance:
         str response that bot should relay to user, empty string ("") if nothing should be relayed
         Exception if error from SQL query, else None
     """
+
     def Disable_reminder(self):
         row = self.get_user_row()
         if row == None:
@@ -136,4 +150,3 @@ class PgInstance:
             pass
 
         return "", None
-            
