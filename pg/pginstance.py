@@ -73,7 +73,7 @@ class PgInstance:
                 "INSERT INTO reminders (fb_id, leetcode_username) VALUES (%s, %s);", (self.fb_id, text))
         else:  # Overwrite username for existing user
             self.curs.execute(
-                "UPDATE reminders SET leetcode_username=%s WHERE fb_ib=%s", (text, self.fb_id))
+                "UPDATE reminders SET leetcode_username=%s WHERE fb_id=%s", (text, self.fb_id))
 
         return "", None
 
