@@ -6,7 +6,7 @@ from pg.pginstance import PgInstance
 
 # Load variables from secret.yaml
 with open("secret.yaml") as secretFile:
-    secretDict = yaml.load(secretFile,  Loader=yaml.BaseLoader)
+    secretDict = yaml.load(secretFile, Loader=yaml.BaseLoader)
     # Facebook page access token
     PAGE_ACCESS_TOKEN = secretDict["PAGE_ACCESS_TOKEN"]
     # Verification token for Facebook chatbot
@@ -18,18 +18,16 @@ bot = Bot(PAGE_ACCESS_TOKEN)  # Initialize PyMessenger Bot
 app = Flask(__name__)  # Initialize Flask app
 
 # Sent if first time user is using bot, check is handled by FB API rather than our end
-greeting = {"greeting": [  # Greeting text
-    {
-        "locale": "default",
-        "text": "We're going to make a 10Xer out of you, {{user_first_name}}!"
-    }
-]}
-bot.set_get_started(greeting)
-gs = {  # Get started button
-    "get_started": {
-        "payload": "start"
-    }
+greeting = {
+    "greeting": [  # Greeting text
+        {
+            "locale": "default",
+            "text": "We're going to make a 10Xer out of you, {{user_first_name}}!",
+        }
+    ]
 }
+bot.set_get_started(greeting)
+gs = {"get_started": {"payload": "start"}}  # Get started button
 bot.set_get_started(gs)
 
 # Response options that persist during entire chat
@@ -41,30 +39,30 @@ persistent_menu = {
             "call_to_actions": [
                 {
                     "type": "postback",
-                            "title": "Set LeetCode username",
-                            "payload": "pm_set_username"
+                    "title": "Set LeetCode username",
+                    "payload": "pm_set_username",
                 },
                 {
                     "type": "postback",
-                            "title": "Set reminder",
-                            "payload": "pm_set_reminder"
+                    "title": "Set reminder",
+                    "payload": "pm_set_reminder",
                 },
                 {
                     "type": "postback",
-                            "title": "Set daily goal",
-                            "payload": "pm_set_daily_goal"
+                    "title": "Set daily goal",
+                    "payload": "pm_set_daily_goal",
                 },
                 {
                     "type": "postback",
-                            "title": "Check daily goal",
-                            "payload": "pm_check_daily_goal"
+                    "title": "Check daily goal",
+                    "payload": "pm_check_daily_goal",
                 },
                 {
                     "type": "postback",
-                            "title": "Disable reminder",
-                            "payload": "pm_disable_reminder"
-                }
-            ]
+                    "title": "Disable reminder",
+                    "payload": "pm_disable_reminder",
+                },
+            ],
         }
     ]
 }
@@ -78,6 +76,8 @@ Requests:
     GET: Facebook API is asking for verification, verify Facebook verification token against VERIFY_TOKEN variable
     POST: User sent a message, handle either text or postback response
 """
+
+
 @app.route("/", methods=["GET", "POST"])
 def endpoint():
     if request.method == "GET":  # Facebook requested verification token
@@ -116,7 +116,8 @@ def received_text(event):
     follow_up = TEXT_FOLLOW_UP_DICT[sender_id]
     if follow_up == None:
         bot.send_text_message(
-            sender_id, "Please use one of the options to communicate with me!")
+            sender_id, "Please use one of the options to communicate with me!"
+        )
     else:
         del TEXT_FOLLOW_UP_DICT[sender_id]
         # Connect to db
@@ -136,17 +137,20 @@ def received_text(event):
             # Check for err from SQL query
             if err != None:
                 print(err)
+                return
 
             # Disconnect from db
             err = db.Disconnect()
             if err != None:
                 print(err)
+                return
 
             # Send db query response to user
             if db_response != "":
                 bot.send_text_message(sender_id, db_response)
         else:
             print(err)
+            return
 
 
 """
@@ -168,15 +172,17 @@ def received_postback(event):
 
     if payload == "start":  # Initial welcome message for first-time users
         bot.send_text_message(
-            sender_id, "Hello, we're going to make a 10Xer out of you!")
+            sender_id, "Hello, we're going to make a 10Xer out of you!"
+        )
         bot.send_image_url(sender_id, "https://i.imgur.com/D4JtitY.png")
         bot.send_text_message(
-            sender_id, "To get started, set your LeetCode username, daily goal for questions you plan on completing, and the time of day to remind you!")
+            sender_id,
+            "To get started, set your LeetCode username, daily goal for questions you plan on completing, and the time of day to remind you!",
+        )
     elif payload.split("_")[0] == "pm":  # persistent menu postback
         if payload.split("_")[1] == "set":  # set commands require a text follow-up
             TEXT_FOLLOW_UP_DICT[sender_id] = payload
-            bot.send_text_message(
-                sender_id, "Sounds good! Give me the information.")
+            bot.send_text_message(sender_id, "Sounds good! Give me the information.")
         else:
             # Connect to db
             db = PgInstance(PSQL_LOGIN_CMD, sender_id)
@@ -193,17 +199,20 @@ def received_postback(event):
                 # Check for err from SQL query
                 if err != None:
                     print(err)
+                    return
 
                 # Disconnect from db
                 err = db.Disconnect()
                 if err != None:
                     print(err)
+                    return
 
-                 # Send db query response to user
+                # Send db query response to user
                 if db_response != "":
                     bot.send_text_message(sender_id, db_response)
             else:
                 print(err)
+                return
 
     else:  # should never happen, should add logging for these cases
         print("Invalid payload: " + payload)
