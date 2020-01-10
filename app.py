@@ -84,6 +84,7 @@ def endpoint():
         token_sent = request.args.get("hub.verify_token")
         return verify_fb_token(token_sent)
     else:  # If the request wasn't GET it was a POST request
+
         output = request.get_json()
         for event in output["entry"]:
             messaging = event["messaging"]
@@ -110,9 +111,10 @@ Args:
 def received_text(event):
     # the FB ID of the person sending the message
     sender_id = event["sender"]["id"]
-    recipient_id = event["recipient"]["id"]  # page's facebook ID
+    # page's facebook ID
+    recipient_id = event["recipient"]["id"]
     text = event["message"]["text"]
-
+    bot.send_action(sender_id, "mark_seen")
     follow_up = TEXT_FOLLOW_UP_DICT[sender_id]
     if follow_up == None:
         bot.send_text_message(
@@ -169,7 +171,7 @@ def received_postback(event):
     sender_id = event["sender"]["id"]
     recipient_id = event["recipient"]["id"]  # page's facebook ID
     payload = event["postback"]["payload"]
-
+    bot.send_action(sender_id, "mark_seen")
     if payload == "start":  # Initial welcome message for first-time users
         bot.send_text_message(
             sender_id, "Hello, we're going to make a 10Xer out of you!"
@@ -213,7 +215,6 @@ def received_postback(event):
             else:
                 print(err)
                 return
-
     else:  # should never happen, should add logging for these cases
         print("Invalid payload: " + payload)
 
