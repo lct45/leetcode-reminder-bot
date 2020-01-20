@@ -114,7 +114,7 @@ def received_text(event):
     # page's facebook ID
     recipient_id = event["recipient"]["id"]
     text = event["message"]["text"]
-    bot.send_action(sender_id, "mark_seen")
+    bot.send_action(sender_id, "mark_seen")  # not working
     if sender_id not in TEXT_FOLLOW_UP_DICT:
         bot.send_text_message(
             sender_id, "Please use one of the options to communicate with me!"
@@ -134,17 +134,26 @@ def received_text(event):
             elif follow_up == "pm_set_daily_goal":
                 db_response, err = db.Set_daily_goal(text)
             else:  # To-do add logging
+                bot.send_text_message(
+                    sender_id, "Error with pm"
+                )  # replace this eventually
                 print("Invalid follow-up: " + follow_up)
 
             # Check for err from SQL query
             if err != None:
                 print(err)
+                bot.send_text_message(
+                    sender_id, "Error with sql query"
+                )  # replace this eventually
                 return
 
             # Disconnect from db
             err = db.Disconnect()
             if err != None:
                 print(err)
+                bot.send_text_message(
+                    sender_id, "Error disconnecting from db"
+                )  # replace this eventually
                 return
 
             # Send db query response to user
@@ -152,6 +161,9 @@ def received_text(event):
                 bot.send_text_message(sender_id, db_response)
         else:
             print(err)
+            bot.send_text_message(
+                sender_id, "Error connecting to db"
+            )  # replace this eventually
             return
 
 
@@ -171,7 +183,7 @@ def received_postback(event):
     sender_id = event["sender"]["id"]
     recipient_id = event["recipient"]["id"]  # page's facebook ID
     payload = event["postback"]["payload"]
-    bot.send_action(sender_id, "mark_seen")
+    bot.send_action(sender_id, "mark_seen")  # not working
     if payload == "start":  # Initial welcome message for first-time users
         bot.send_text_message(
             sender_id, "Hello, we're going to make a 10Xer out of you!"
@@ -184,7 +196,9 @@ def received_postback(event):
     elif payload.split("_")[0] == "pm":  # persistent menu postback
         if payload.split("_")[1] == "set":  # set commands require a text follow-up
             TEXT_FOLLOW_UP_DICT[sender_id] = payload
-            bot.send_text_message(sender_id, "Sounds good! Give me the information.")
+            bot.send_text_message(
+                sender_id, "Sounds good! Give me the information."
+            )  # We should replace give me the information with what they should give e.g. "Sounds good! What is your username, friend?"
         else:
             # Connect to db
             db = PgInstance(PSQL_LOGIN_CMD, sender_id)
@@ -197,16 +211,25 @@ def received_postback(event):
                     db_response, err = db.Disable_reminder()
                 else:  # To-do add logging
                     print("Invalid payload: " + payload)
+                    bot.send_text_message(
+                        sender_id, "Error with pm"
+                    )  # replace this eventually
 
                 # Check for err from SQL query
                 if err != None:
                     print(err)
+                    bot.send_text_message(
+                        sender_id, "Error with sql query"
+                    )  # replace this eventually
                     return
 
                 # Disconnect from db
                 err = db.Disconnect()
                 if err != None:
                     print(err)
+                    bot.send_text_message(
+                        sender_id, "Error disconnecting form db"
+                    )  # replace this eventually
                     return
 
                 # Send db query response to user
@@ -214,6 +237,9 @@ def received_postback(event):
                     bot.send_text_message(sender_id, db_response)
             else:
                 print(err)
+                bot.send_text_message(
+                    sender_id, "Error connecting to db"
+                )  # replace this eventually
                 return
     else:  # should never happen, should add logging for these cases
         print("Invalid payload: " + payload)
