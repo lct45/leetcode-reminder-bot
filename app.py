@@ -115,12 +115,12 @@ def received_text(event):
     recipient_id = event["recipient"]["id"]
     text = event["message"]["text"]
     bot.send_action(sender_id, "mark_seen")
-    follow_up = TEXT_FOLLOW_UP_DICT[sender_id]
-    if follow_up == None:
+    if sender_id not in TEXT_FOLLOW_UP_DICT:
         bot.send_text_message(
             sender_id, "Please use one of the options to communicate with me!"
         )
     else:
+        follow_up = TEXT_FOLLOW_UP_DICT[sender_id]
         del TEXT_FOLLOW_UP_DICT[sender_id]
         # Connect to db
         db = PgInstance(PSQL_LOGIN_CMD, sender_id)
