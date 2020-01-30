@@ -3,6 +3,7 @@ import random
 from flask import Flask, request
 from pymessenger.bot import Bot
 from pg.pginstance import PgInstance
+from util import validation
 
 # Load variables from secret.yaml
 with open("secret.yaml") as secretFile:
@@ -128,7 +129,14 @@ def received_text(event):
         if err == None:  # Successful connection
             db_response = None
             if follow_up == "pm_set_username":
-                db_response, err = db.Set_username(text)
+                msg, validUsername, err = validation.validate_username(text)
+                if validUsername:
+                    db_response, err = db.Set_username(text)
+                else:
+                    bot.send_text_message(sender_id, msg)  # replace this eventually
+                    print("Invalid username")
+                    if err != None:
+                        print(err)
             elif follow_up == "pm_set_reminder":
                 db_response, err = db.Set_reminder(text)
             elif follow_up == "pm_set_daily_goal":
