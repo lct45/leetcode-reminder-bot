@@ -133,7 +133,8 @@ def received_text(event):
                 if validUsername:
                     db_response, err = db.Set_username(text)
                 else:
-                    bot.send_text_message(sender_id, msg)  # replace this eventually
+                    # replace this eventually
+                    bot.send_text_message(sender_id, msg)
                     print("Invalid username")
                     if err != None:
                         print(err)
@@ -155,6 +156,31 @@ def received_text(event):
                 )  # replace this eventually
                 return
 
+            # Send db query response to user
+            if db_response != "":
+                bot.send_text_message(sender_id, db_response)
+
+            checklist = db.Get_checklist()
+            leetcode_username_emoji = "❎"
+            daily_goal_emoji = "❎"
+            reminder_time_emoji = "❎"
+            if checklist["leetcode_username"] != None:
+                leetcode_username_emoji = "✅"
+            if checklist["daily_goal"] != None:
+                daily_goal_emoji = "✅"
+            if checklist["reminder_time"] != None:
+                reminder_time_emoji = "✅"
+            checklist_msg = (
+                "Checklist status:\n"
+                + "\n1. Set your LeetCode username "
+                + leetcode_username_emoji
+                + "\n2. Daily number of questions to complete "
+                + daily_goal_emoji
+                + "\n3. Time of day to remind you "
+                + reminder_time_emoji
+            )
+            bot.send_text_message(sender_id, checklist_msg)
+
             # Disconnect from db
             err = db.Disconnect()
             if err != None:
@@ -164,9 +190,6 @@ def received_text(event):
                 )  # replace this eventually
                 return
 
-            # Send db query response to user
-            if db_response != "":
-                bot.send_text_message(sender_id, db_response)
         else:
             print(err)
             bot.send_text_message(
@@ -199,13 +222,26 @@ def received_postback(event):
         bot.send_image_url(sender_id, "https://i.imgur.com/D4JtitY.png")
         bot.send_text_message(
             sender_id,
-            "To get started, set your LeetCode username, daily goal for questions you plan on completing, and the time of day to remind you!",
+            "To get started use the menu below to complete the following checklist:\n\n1. Set your LeetCode username ❎\n2. Daily number of questions to complete ❎\n3. Time of day to remind you ❎",
         )
     elif payload.split("_")[0] == "pm":  # persistent menu postback
         if payload.split("_")[1] == "set":  # set commands require a text follow-up
             TEXT_FOLLOW_UP_DICT[sender_id] = payload
+            selected_info = payload.split("_")[2]
+            inquiry_msg = ""
+            if selected_info == "username":
+                inquiry_msg = "Sounds good! What is your Leetcode username?"
+            elif selected_info == "reminder":
+                inquiry_msg = "Sweet! When would you like to be reminded? Please format it like such e.g. 4:20pm"
+            elif selected_info == "daily":  # daily_goal
+                inquiry_msg = "Awesome! What number of questions do you plan on doing daily? Give me a number between 1 and 100!"
+            else:
+                print("Invalid pm_set")
+                bot.send_text_message(
+                    sender_id, "Error with pm"
+                )  # replace this eventually
             bot.send_text_message(
-                sender_id, "Sounds good! Give me the information."
+                sender_id, inquiry_msg
             )  # We should replace give me the information with what they should give e.g. "Sounds good! What is your username, friend?"
         else:
             # Connect to db

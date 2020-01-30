@@ -26,3 +26,11 @@ def validate_username(username):
     except Exception as e:
         return "That's not a valid Leetcode username!", False, e
 
+
+def validate_reminder(reminder):
+    pass
+
+
+def validate_daily_goal(daily_goal):
+    pass
+

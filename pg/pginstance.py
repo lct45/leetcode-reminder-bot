@@ -170,3 +170,12 @@ class PgInstance:
                 "UPDATE reminders SET reminder_time=NULL WHERE fb_id=%s", (self.fb_id)
             )
             return "Reminder disabled.", None
+
+    def Get_checklist(self):
+        checklist = {}
+        checklist["leetcode_username"] = getattr(
+            self.get_user_row(), "leetcode_username"
+        )
+        checklist["daily_goal"] = getattr(self.get_user_row(), "daily_goal")
+        checklist["reminder_time"] = getattr(self.get_user_row(), "reminder_time")
+        return checklist
