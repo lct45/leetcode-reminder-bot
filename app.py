@@ -1,5 +1,6 @@
 import yaml
 import random
+import checkQuestions from leetcode.py
 from flask import Flask, request
 from pymessenger.bot import Bot
 from pg.pginstance import PgInstance
@@ -132,6 +133,9 @@ def received_text(event):
                 msg, validUsername, err = validation.validate_username(text)
                 if validUsername:
                     db_response, err = db.Set_username(text)
+                    question = checkQuestions(text)
+                    db_response2, err2 = db.Set_completed_questions(question)
+
                 else:
                     # replace this eventually
                     bot.send_text_message(sender_id, msg)

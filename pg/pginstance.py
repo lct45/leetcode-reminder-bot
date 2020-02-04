@@ -134,7 +134,31 @@ class PgInstance:
                 (text, self.fb_id),
             )
             return "Reminder updated.", None
+    
+    """
+    Set current questions from leetcode account
 
+    Args:
+        text: current questions completed according to leetcode
+    Returns:
+        str response that bot should relay to user, empty string ("") if nothing should be relayed
+        Exception if error from SQL query, else None
+    """
+
+    def Set_completed_questions(self, text):
+        row = self.get_user_row()
+        if row == None:
+            self.curs.execute(
+                "INSERT INTO reminders (fb_id, completed_questions) VALUES (%s, %s)",
+                (self.fb_id, text),
+            )
+
+        else:
+            self.curs.execute(
+                "UPDATE reminders SET questions_completed=%s WHERE fb_id=%s", (text, self.fb_id)
+            )
+        response = "You've completed " + text + " questions so far"
+        return response, None
     """
     Check daily goal for FB user
 
