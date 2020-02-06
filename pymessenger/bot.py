@@ -27,7 +27,8 @@ class Bot:
 
         self.api_version = kwargs.get("api_version") or DEFAULT_API_VERSION
         self.app_secret = kwargs.get("app_secret")
-        self.graph_url = "https://graph.facebook.com/v{0}".format(self.api_version)
+        self.graph_url = "https://graph.facebook.com/v{0}".format(
+            self.api_version)
         self.access_token = access_token
 
     @property
@@ -340,7 +341,8 @@ class Bot:
 
     def send_raw(self, payload):
         request_endpoint = "{0}/me/messages".format(self.graph_url)
-        response = requests.post(request_endpoint, params=self.auth_args, json=payload)
+        response = requests.post(
+            request_endpoint, params=self.auth_args, json=payload)
         result = response.json()
         return result
 
@@ -357,7 +359,8 @@ class Bot:
           Response from API as <dict>
         """
         request_endpoint = "{0}/me/messenger_profile".format(self.graph_url)
-        response = requests.post(request_endpoint, params=self.auth_args, json=gs_obj)
+        response = requests.post(
+            request_endpoint, params=self.auth_args, json=gs_obj)
         result = response.json()
         return result
 
@@ -370,7 +373,8 @@ class Bot:
           Response from API as <dict>
         """
         request_endpoint = "{0}/me/messenger_profile".format(self.graph_url)
-        response = requests.post(request_endpoint, params=self.auth_args, json=pm_obj)
+        response = requests.post(
+            request_endpoint, params=self.auth_args, json=pm_obj)
         result = response.json()
         return result
 
@@ -402,11 +406,9 @@ class Bot:
         result = response.json()
         return result
 
-    def send_text_quick_replies(
-        self, recipient_id, listOfReplies, messageToReplyTo, listOfPayloads=[]
-    ):
+    def send_text_quick_replies(self, recipient_id, listOfReplies, messageToReplyTo="Hello, is there anything I can help you with?", listOfPayloads=[]):
         """
-        Sends a list of text quick replies with an optional message to send before sending the quick replies
+        Sends a list of text quick replies with an optional message (Default = " ") to send before sending the quick replies
         Payload and Message are optional, however, if no payload for a specific reply (i.e. None) 
         or for all quick replies, the payload will be defined as the reply itself.
 
@@ -421,31 +423,39 @@ class Bot:
         # If no payloads identified
         if len(listOfPayloads) == 0:
             for reply in listOfReplies:
-                quickRepliesList.append(
-                    {"content_type": "text", "title": reply, "payload": reply}
-                )
+                quickRepliesList.append({
+                                        "content_type": "text",
+                                        "title": reply,
+                                        "payload": reply
+                                        })
 
         # If payloads is identified
         else:
             for reply, payload in zip(listOfReplies, listOfPayloads):
                 # if some payload is not identified in the list
                 if payload == None:
-                    quickRepliesList.append(
-                        {"content_type": "text", "title": reply, "payload": reply}
-                    )
-                if payload != None:
-                    quickRepliesList.append(
-                        {"content_type": "text", "title": reply, "payload": payload}
-                    )
+                    quickRepliesList.append({
+                                            "content_type": "text",
+                                            "title": reply,
+                                            "payload": reply
+                                            })
+                else:
+                    quickRepliesList.append({
+                                            "content_type": "text",
+                                            "title": reply,
+                                            "payload": payload
+                                            })
 
             # if the length of payloads is less than replies, then just let the payload for the rest to be just the reply
             if len(listOfPayloads) < len(listOfReplies):
-                for reply in listOfReplies[len(listOfPayloads) :]:
-                    quickRepliesList.append(
-                        {"content_type": "text", "title": reply, "payload": reply}
-                    )
+                for reply in listOfReplies[len(listOfPayloads):]:
+                    quickRepliesList.append({
+                                            "content_type": "text",
+                                            "title": reply,
+                                            "payload": reply
+                                            })
 
-        return self.send_message(
-            recipient_id, {"text": messageToReplyTo, "quick_replies": quickRepliesList}
-        )
-
+        return self.send_message(recipient_id, {
+            "text": messageToReplyTo,
+            "quick_replies": quickRepliesList
+        })

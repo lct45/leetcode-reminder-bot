@@ -52,17 +52,17 @@ persistent_menu = {
                     "type": "postback",
                     "title": "Set daily goal",
                     "payload": "pm_set_daily_goal",
-                },
-                {
-                    "type": "postback",
-                    "title": "Check daily goal",
-                    "payload": "pm_check_daily_goal",
-                },
-                {
-                    "type": "postback",
-                    "title": "Disable reminder",
-                    "payload": "pm_disable_reminder",
-                },
+                }
+                # {
+                #     "type": "postback",
+                #     "title": "Check daily goal",
+                #     "payload": "pm_check_daily_goal",
+                # },
+                # {
+                #     "type": "postback",
+                #     "title": "Disable reminder",
+                #     "payload": "pm_disable_reminder",
+                # },
             ],
         }
     ]
@@ -81,11 +81,11 @@ Requests:
 
 @app.route("/", methods=["GET", "POST"])
 def endpoint():
+
     if request.method == "GET":  # Facebook requested verification token
         token_sent = request.args.get("hub.verify_token")
         return verify_fb_token(token_sent)
     else:  # If the request wasn't GET it was a POST request
-
         output = request.get_json()
         for event in output["entry"]:
             messaging = event["messaging"]
@@ -112,10 +112,15 @@ Args:
 def received_text(event):
     # the FB ID of the person sending the message
     sender_id = event["sender"]["id"]
+    bot.send_action(sender_id, "mark_seen")  # not working
     # page's facebook ID
     recipient_id = event["recipient"]["id"]
-    text = event["message"]["text"]
-    bot.send_action(sender_id, "mark_seen")  # not working
+    try:
+        text = event["message"]["text"]
+    except:
+        # the fb like button breaks the bot
+        print("text is empty")
+
     if sender_id not in TEXT_FOLLOW_UP_DICT:
         bot.send_text_message(
             sender_id, "Please use one of the options to communicate with me!"
@@ -129,8 +134,8 @@ def received_text(event):
         if err == None:  # Successful connection
             db_response = None
             if follow_up == "pm_set_username":
-                msg, validUsername, err = validation.validate_username(text)
-                if validUsername:
+                msg, valid, err = validation.validate_username(text)
+                if valid:
                     db_response, err = db.Set_username(text)
                 else:
                     # replace this eventually
@@ -139,9 +144,27 @@ def received_text(event):
                     if err != None:
                         print(err)
             elif follow_up == "pm_set_reminder":
-                db_response, err = db.Set_reminder(text)
+                msg, valid, err = validation.validate_reminder(
+                    text, bot.get_user_info(sender_id, ["timezone"]))
+                if valid:
+                    db_response, err = db.Set_reminder(
+                        msg)  # msg is the time obj if valid
+                else:
+                    # replace this eventually
+                    bot.send_text_message(sender_id, msg)
+                    print("Invalid daily goal")
+                    if err != None:
+                        print(err)
             elif follow_up == "pm_set_daily_goal":
-                db_response, err = db.Set_daily_goal(text)
+                msg, valid, err = validation.validate_daily_goal(text)
+                if valid:
+                    db_response, err = db.Set_daily_goal(text)
+                else:
+                    # replace this eventually
+                    bot.send_text_message(sender_id, msg)
+                    print("Invalid daily goal")
+                    if err != None:
+                        print(err)
             else:  # To-do add logging
                 bot.send_text_message(
                     sender_id, "Error with pm"
@@ -200,7 +223,7 @@ def received_text(event):
 
 """
 Responds to user either the welcome message or responds to postback response from the persistent menu and sets TEXT_FOLLOW_UP_DICT[sender_id] to alter received_text() behavior
-   
+
 Args:
     event: Nested dictionary that contains Facebook user ID, chatbot page's ID, and message that was sent
 
@@ -215,6 +238,7 @@ def received_postback(event):
     recipient_id = event["recipient"]["id"]  # page's facebook ID
     payload = event["postback"]["payload"]
     bot.send_action(sender_id, "mark_seen")  # not working
+
     if payload == "start":  # Initial welcome message for first-time users
         bot.send_text_message(
             sender_id, "Hello, we're going to make a 10Xer out of you!"
@@ -232,9 +256,9 @@ def received_postback(event):
             if selected_info == "username":
                 inquiry_msg = "Sounds good! What is your Leetcode username?"
             elif selected_info == "reminder":
-                inquiry_msg = "Sweet! When would you like to be reminded? Please format it like such e.g. 4:20pm"
+                inquiry_msg = "Sweet! When would you like to be reminded daily? e.g. 4:20 PM"
             elif selected_info == "daily":  # daily_goal
-                inquiry_msg = "Awesome! What number of questions do you plan on doing daily? Give me a number between 1 and 100!"
+                inquiry_msg = "Awesome! What number of questions do you plan on doing daily? Give me a number between 0 and 100!"
             else:
                 print("Invalid pm_set")
                 bot.send_text_message(
