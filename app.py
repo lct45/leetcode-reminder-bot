@@ -31,43 +31,73 @@ bot.set_get_started(greeting)
 gs = {"get_started": {"payload": "start"}}  # Get started button
 bot.set_get_started(gs)
 
-# Response options that persist during entire chat
-persistent_menu = {
-    "persistent_menu": [
-        {
-            "locale": "default",
-            "composer_input_disabled": False,
-            "call_to_actions": [
-                {
-                    "type": "postback",
-                    "title": "Set LeetCode username",
-                    "payload": "pm_set_username",
-                },
-                {
-                    "type": "postback",
-                    "title": "Set reminder",
-                    "payload": "pm_set_reminder",
-                },
-                {
-                    "type": "postback",
-                    "title": "Set daily goal",
-                    "payload": "pm_set_daily_goal",
-                }
-                # {
-                #     "type": "postback",
-                #     "title": "Check daily goal",
-                #     "payload": "pm_check_daily_goal",
-                # },
-                # {
-                #     "type": "postback",
-                #     "title": "Disable reminder",
-                #     "payload": "pm_disable_reminder",
-                # },
-            ],
-        }
-    ]
-}
-bot.set_persistent_menu(persistent_menu)
+# disabled
+# persistent_menu = {
+#     "persistent_menu": [
+#         {
+#             "locale": "default",
+#             "composer_input_disabled": False,
+#             "call_to_actions": [
+#                 {
+#                     "type": "postback",
+#                     "title": "Set LeetCode username",
+#                     "payload": "qr_set_username",
+#                 },
+#                 {
+#                     "type": "postback",
+#                     "title": "Set reminder",
+#                     "payload": "qr_set_reminder",
+#                 },
+#                 {
+#                     "type": "postback",
+#                     "title": "Set daily goal",
+#                     "payload": "qr_set_daily_goal",
+#                 }
+#                 {
+#                     "type": "postback",
+#                     "title": "Check daily goal",
+#                     "payload": "qr_check_daily_goal",
+#                 },
+#                 {
+#                     "type": "postback",
+#                     "title": "Disable reminder",
+#                     "payload": "qr_disable_reminder",
+#                 },
+#             ],
+#         }
+#     ]
+# }
+# bot.set_persistent_menu(persistent_menu)
+
+quick_replies_list = [
+    {
+        "content_type": "text",
+        "title": "Set LeetCode username",
+        "payload": "qr_set_username",
+        # "image-url: url-here"
+    },
+    {
+        "content_type": "text",
+        "title": "Set reminder",
+        "payload": "qr_set_reminder",
+    },
+    {
+        "content_type": "text",
+        "title": "Set daily goal",
+        "payload": "qr_set_daily_goal",
+    },
+    {
+        "content_type": "text",
+        "title": "Check daily goal",
+        "payload": "qr_check_daily_goal",
+    },
+    {
+        "content_type": "text",
+        "title": "Disable reminder",
+        "payload": "qr_disable_reminder",
+    },
+]
+
 TEXT_FOLLOW_UP_DICT = {}
 
 """
@@ -91,7 +121,13 @@ def endpoint():
             messaging = event["messaging"]
             for message in messaging:
                 if message.get("message"):  # Got text
-                    received_text(message)
+                    try:
+                        received_text(message)
+                    except Exception as e:
+                        bot.send_text_quick_replies(
+                            message["sender"]["id"], "Something went horribly wrong!", quick_replies_list)
+                        print("Something went horribly wrong " + e)
+
                 elif message.get("postback"):  # Got message
                     received_postback(message)
     return "Message Processed"
@@ -113,6 +149,7 @@ def received_text(event):
     # the FB ID of the person sending the message
     sender_id = event["sender"]["id"]
     bot.send_action(sender_id, "mark_seen")  # not working
+
     # page's facebook ID
     recipient_id = event["recipient"]["id"]
     try:
@@ -121,10 +158,75 @@ def received_text(event):
         # the fb like button breaks the bot
         print("text is empty")
 
-    if sender_id not in TEXT_FOLLOW_UP_DICT:
-        bot.send_text_message(
-            sender_id, "Please use one of the options to communicate with me!"
-        )
+    payload = None
+    try:
+        payload = event["message"]["quick_reply"]["payload"]
+    except:
+        pass
+
+    if payload != None and payload.split("_")[0] == "qr":
+        if payload.split("_")[1] == "set":  # set commands require a text follow-up
+            TEXT_FOLLOW_UP_DICT[sender_id] = payload
+            selected_info = payload.split("_")[2]
+            inquiry_msg = ""
+            if selected_info == "username":
+                inquiry_msg = "Sounds good! What is your Leetcode username?"
+            elif selected_info == "reminder":
+                inquiry_msg = "Sweet! When would you like to be reminded daily? e.g. 4:20 PM"
+            elif selected_info == "daily":  # daily_goal
+                inquiry_msg = "Awesome! What number of questions do you plan on doing daily? Give me a number between 0 and 100!"
+            else:
+                print("Invalid qr_set")
+                bot.send_text_quick_replies(
+                    sender_id, "Error with qr", quick_replies_list)  # replace this eventually
+            bot.send_text_quick_replies(
+                sender_id, inquiry_msg, quick_replies_list)  # We should replace give me the information with what they should give e.g. "Sounds good! What is your username, friend?"
+        else:
+            # Connect to db
+            db = PgInstance(PSQL_LOGIN_CMD, sender_id)
+            err = db.Connect()
+            if err == None:  # Successful connection
+                db_response = None
+                if payload == "qr_check_daily_goal":
+                    db_response, err = db.Check_daily_goal()
+                elif payload == "qr_disable_reminder":
+                    db_response, err = db.Disable_reminder()
+                else:  # To-do add logging
+                    print("Invalid payload: " + payload)
+                    bot.send_text_quick_replies(
+                        sender_id, "Error with qr", quick_replies_list)  # replace this eventually
+
+                # Check for err from SQL query
+                if err != None:
+                    print(err)
+                    bot.send_text_quick_replies(
+                        sender_id, "Error with sql query", quick_replies_list)  # replace this eventually
+                    return
+
+                # Disconnect from db
+                err = db.Disconnect()
+                if err != None:
+                    print(err)
+                    bot.send_text_quick_replies(
+                        sender_id, "Error disconnecting form db", quick_replies_list)  # replace this eventually
+                    return
+
+                # Send db query response to user
+                if db_response != "":
+                    bot.send_text_quick_replies(
+                        sender_id, db_response, quick_replies_list)
+            else:
+                print(err)
+                bot.send_text_quick_replies(
+                    sender_id, "Error connecting to db", quick_replies_list)  # replace this eventually
+                return
+    elif sender_id not in TEXT_FOLLOW_UP_DICT:
+        try:
+            bot.send_text_quick_replies(
+                sender_id, "this is a test", quick_replies_list)
+        except:
+            bot.send_text_quick_replies(
+                sender_id, "Please use one of the options to communicate with me!", quick_replies_list)
     else:
         follow_up = TEXT_FOLLOW_UP_DICT[sender_id]
         del TEXT_FOLLOW_UP_DICT[sender_id]
@@ -133,17 +235,18 @@ def received_text(event):
         err = db.Connect()
         if err == None:  # Successful connection
             db_response = None
-            if follow_up == "pm_set_username":
+            if follow_up == "qr_set_username":
                 msg, valid, err = validation.validate_username(text)
                 if valid:
                     db_response, err = db.Set_username(text)
                 else:
                     # replace this eventually
-                    bot.send_text_message(sender_id, msg)
+                    bot.send_text_quick_replies(
+                        sender_id, msg, quick_replies_list)
                     print("Invalid username")
                     if err != None:
                         print(err)
-            elif follow_up == "pm_set_reminder":
+            elif follow_up == "qr_set_reminder":
                 msg, valid, err = validation.validate_reminder(
                     text, bot.get_user_info(sender_id, ["timezone"]))
                 if valid:
@@ -151,37 +254,38 @@ def received_text(event):
                         msg)  # msg is the time obj if valid
                 else:
                     # replace this eventually
-                    bot.send_text_message(sender_id, msg)
+                    bot.send_text_quick_replies(
+                        sender_id, msg, quick_replies_list)
                     print("Invalid daily goal")
                     if err != None:
                         print(err)
-            elif follow_up == "pm_set_daily_goal":
+            elif follow_up == "qr_set_daily_goal":
                 msg, valid, err = validation.validate_daily_goal(text)
                 if valid:
                     db_response, err = db.Set_daily_goal(text)
                 else:
                     # replace this eventually
-                    bot.send_text_message(sender_id, msg)
+                    bot.send_text_quick_replies(
+                        sender_id, msg, quick_replies_list)
                     print("Invalid daily goal")
                     if err != None:
                         print(err)
             else:  # To-do add logging
-                bot.send_text_message(
-                    sender_id, "Error with pm"
-                )  # replace this eventually
+                bot.send_text_quick_replies(
+                    sender_id, "Error with qr", quick_replies_list)  # replace this eventually
                 print("Invalid follow-up: " + follow_up)
 
             # Check for err from SQL query
             if err != None:
                 print(err)
-                bot.send_text_message(
-                    sender_id, "Error with sql query"
-                )  # replace this eventually
+                bot.send_text_quick_replies(
+                    sender_id, "Error with sql query", quick_replies_list)  # replace this eventually
                 return
 
             # Send db query response to user
             if db_response != "":
-                bot.send_text_message(sender_id, db_response)
+                bot.send_text_quick_replies(
+                    sender_id, db_response, quick_replies_list)
 
             checklist = db.Get_checklist()
             leetcode_username_emoji = "❎"
@@ -202,22 +306,21 @@ def received_text(event):
                 + "\n3. Time of day to remind you "
                 + reminder_time_emoji
             )
-            bot.send_text_message(sender_id, checklist_msg)
+            bot.send_text_quick_replies(
+                sender_id, checklist_msg, quick_replies_list)
 
             # Disconnect from db
             err = db.Disconnect()
             if err != None:
                 print(err)
-                bot.send_text_message(
-                    sender_id, "Error disconnecting from db"
-                )  # replace this eventually
+                bot.send_text_quick_replies(
+                    sender_id, "Error disconnecting from db", quick_replies_list)  # replace this eventually
                 return
 
         else:
             print(err)
-            bot.send_text_message(
-                sender_id, "Error connecting to db"
-            )  # replace this eventually
+            bot.send_text_quick_replies(
+                sender_id, "Error connecting to db", quick_replies_list)  # replace this eventually
             return
 
 
@@ -244,71 +347,10 @@ def received_postback(event):
             sender_id, "Hello, we're going to make a 10Xer out of you!"
         )
         bot.send_image_url(sender_id, "https://i.imgur.com/D4JtitY.png")
-        bot.send_text_message(
+        bot.send_text_quick_replies(
             sender_id,
-            "To get started use the menu below to complete the following checklist:\n\n1. Set your LeetCode username ❎\n2. Daily number of questions to complete ❎\n3. Time of day to remind you ❎",
-        )
-    elif payload.split("_")[0] == "pm":  # persistent menu postback
-        if payload.split("_")[1] == "set":  # set commands require a text follow-up
-            TEXT_FOLLOW_UP_DICT[sender_id] = payload
-            selected_info = payload.split("_")[2]
-            inquiry_msg = ""
-            if selected_info == "username":
-                inquiry_msg = "Sounds good! What is your Leetcode username?"
-            elif selected_info == "reminder":
-                inquiry_msg = "Sweet! When would you like to be reminded daily? e.g. 4:20 PM"
-            elif selected_info == "daily":  # daily_goal
-                inquiry_msg = "Awesome! What number of questions do you plan on doing daily? Give me a number between 0 and 100!"
-            else:
-                print("Invalid pm_set")
-                bot.send_text_message(
-                    sender_id, "Error with pm"
-                )  # replace this eventually
-            bot.send_text_message(
-                sender_id, inquiry_msg
-            )  # We should replace give me the information with what they should give e.g. "Sounds good! What is your username, friend?"
-        else:
-            # Connect to db
-            db = PgInstance(PSQL_LOGIN_CMD, sender_id)
-            err = db.Connect()
-            if err == None:  # Successful connection
-                db_response = None
-                if payload == "pm_check_daily_goal":
-                    db_response, err = db.Check_daily_goal()
-                elif payload == "pm_disable_reminder":
-                    db_response, err = db.Disable_reminder()
-                else:  # To-do add logging
-                    print("Invalid payload: " + payload)
-                    bot.send_text_message(
-                        sender_id, "Error with pm"
-                    )  # replace this eventually
+            "To get started use the menu below to complete the following checklist:\n\n1. Set your LeetCode username ❎\n2. Daily number of questions to complete ❎\n3. Time of day to remind you ❎", quick_replies_list)
 
-                # Check for err from SQL query
-                if err != None:
-                    print(err)
-                    bot.send_text_message(
-                        sender_id, "Error with sql query"
-                    )  # replace this eventually
-                    return
-
-                # Disconnect from db
-                err = db.Disconnect()
-                if err != None:
-                    print(err)
-                    bot.send_text_message(
-                        sender_id, "Error disconnecting form db"
-                    )  # replace this eventually
-                    return
-
-                # Send db query response to user
-                if db_response != "":
-                    bot.send_text_message(sender_id, db_response)
-            else:
-                print(err)
-                bot.send_text_message(
-                    sender_id, "Error connecting to db"
-                )  # replace this eventually
-                return
     else:  # should never happen, should add logging for these cases
         print("Invalid payload: " + payload)
 
