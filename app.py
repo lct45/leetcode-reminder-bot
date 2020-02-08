@@ -4,6 +4,7 @@ from flask import Flask, request
 from pymessenger.bot import Bot
 from pg.pginstance import PgInstance
 from util import validation
+from util import dialog
 
 # Load variables from secret.yaml
 with open("secret.yaml") as secretFile:
@@ -68,6 +69,7 @@ bot.set_get_started(gs)
 #     ]
 # }
 # bot.set_persistent_menu(persistent_menu)
+bot.remove_persistent_menu()
 
 quick_replies_list = [
     {
@@ -111,7 +113,6 @@ Requests:
 
 @app.route("/", methods=["GET", "POST"])
 def endpoint():
-
     if request.method == "GET":  # Facebook requested verification token
         token_sent = request.args.get("hub.verify_token")
         return verify_fb_token(token_sent)
@@ -120,16 +121,15 @@ def endpoint():
         for event in output["entry"]:
             messaging = event["messaging"]
             for message in messaging:
-                if message.get("message"):  # Got text
-                    try:
+                try:
+                    if message.get("message"):  # Got text
                         received_text(message)
-                    except Exception as e:
-                        bot.send_text_quick_replies(
-                            message["sender"]["id"], "Something went horribly wrong!", quick_replies_list)
-                        print("Something went horribly wrong " + e)
-
-                elif message.get("postback"):  # Got message
-                    received_postback(message)
+                    elif message.get("postback"):  # Got message
+                        received_postback(message)
+                except Exception as e:
+                    bot.send_text_quick_replies(
+                        message["sender"]["id"], "Something went horribly wrong!", quick_replies_list)
+                    print("Something went horribly wrong: " + str(e))
     return "Message Processed"
 
 
@@ -151,7 +151,7 @@ def received_text(event):
     bot.send_action(sender_id, "mark_seen")  # not working
 
     # page's facebook ID
-    recipient_id = event["recipient"]["id"]
+    # recipient_id = event["recipient"]["id"]
     try:
         text = event["message"]["text"]
     except:
@@ -180,7 +180,7 @@ def received_text(event):
                 bot.send_text_quick_replies(
                     sender_id, "Error with qr", quick_replies_list)  # replace this eventually
             bot.send_text_quick_replies(
-                sender_id, inquiry_msg, quick_replies_list)  # We should replace give me the information with what they should give e.g. "Sounds good! What is your username, friend?"
+                sender_id, inquiry_msg, quick_replies_list)
         else:
             # Connect to db
             db = PgInstance(PSQL_LOGIN_CMD, sender_id)
@@ -195,14 +195,12 @@ def received_text(event):
                     print("Invalid payload: " + payload)
                     bot.send_text_quick_replies(
                         sender_id, "Error with qr", quick_replies_list)  # replace this eventually
-
                 # Check for err from SQL query
                 if err != None:
                     print(err)
                     bot.send_text_quick_replies(
                         sender_id, "Error with sql query", quick_replies_list)  # replace this eventually
                     return
-
                 # Disconnect from db
                 err = db.Disconnect()
                 if err != None:
@@ -287,27 +285,10 @@ def received_text(event):
                 bot.send_text_quick_replies(
                     sender_id, db_response, quick_replies_list)
 
-            checklist = db.Get_checklist()
-            leetcode_username_emoji = "❎"
-            daily_goal_emoji = "❎"
-            reminder_time_emoji = "❎"
-            if checklist["leetcode_username"] != None:
-                leetcode_username_emoji = "✅"
-            if checklist["daily_goal"] != None:
-                daily_goal_emoji = "✅"
-            if checklist["reminder_time"] != None:
-                reminder_time_emoji = "✅"
-            checklist_msg = (
-                "Checklist status:\n"
-                + "\n1. Set your LeetCode username "
-                + leetcode_username_emoji
-                + "\n2. Daily number of questions to complete "
-                + daily_goal_emoji
-                + "\n3. Time of day to remind you "
-                + reminder_time_emoji
-            )
+            checklist_msg = dialog.get_checklist(db)
+
             bot.send_text_quick_replies(
-                sender_id, checklist_msg, quick_replies_list)
+                sender_id, "Checklist status:\n" + checklist_msg, quick_replies_list)
 
             # Disconnect from db
             err = db.Disconnect()
@@ -338,7 +319,7 @@ Documentation:
 def received_postback(event):
     # the FB ID of the person sending the message
     sender_id = event["sender"]["id"]
-    recipient_id = event["recipient"]["id"]  # page's facebook ID
+    # recipient_id = event["recipient"]["id"]  # page's facebook ID
     payload = event["postback"]["payload"]
     bot.send_action(sender_id, "mark_seen")  # not working
 
@@ -347,11 +328,23 @@ def received_postback(event):
             sender_id, "Hello, we're going to make a 10Xer out of you!"
         )
         bot.send_image_url(sender_id, "https://i.imgur.com/D4JtitY.png")
-        bot.send_text_quick_replies(
-            sender_id,
-            "To get started use the menu below to complete the following checklist:\n\n1. Set your LeetCode username ❎\n2. Daily number of questions to complete ❎\n3. Time of day to remind you ❎", quick_replies_list)
-
+        db = PgInstance(PSQL_LOGIN_CMD, sender_id)
+        err = db.Connect()
+        if err == None:
+            err = db.Delete_user()
+            checklist_msg = dialog.get_checklist(db)
+            bot.send_text_quick_replies(
+                sender_id,
+                "To get started, we're going to need the following information:\n" + checklist_msg, quick_replies_list)
+            db.Disconnect()
+        else:
+            print(err)
+            bot.send_text_quick_replies(
+                sender_id, "Error connecting to db", quick_replies_list)  # replace this eventually
+            return
     else:  # should never happen, should add logging for these cases
+        bot.send_text_quick_replies(
+            sender_id, "Invalid payload", quick_replies_list)
         print("Invalid payload: " + payload)
 
 
