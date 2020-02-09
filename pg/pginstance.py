@@ -2,6 +2,8 @@ import psycopg2
 import psycopg2.extras
 
 # Servers as wrapper for psycopg2 in the context of this project and provides error handling
+
+
 class PgInstance:
     def __init__(self, PSQL_LOGIN_CMD, fb_id):
         # Raw command used to login to PSQL database through psycopg2
@@ -34,7 +36,7 @@ class PgInstance:
         None if successful disconnection, else Exception
     """
 
-    def Disconnect(self,):
+    def Disconnect(self):
         try:  # make changes persist
             self.conn.commit()
         except Exception as e:
@@ -55,7 +57,8 @@ class PgInstance:
     """
 
     def get_user_row(self):
-        self.curs.execute("SELECT * FROM reminders WHERE fb_id=%s", (self.fb_id,))
+        self.curs.execute(
+            "SELECT * FROM reminders WHERE fb_id=%s", (self.fb_id,))
         return self.curs.fetchone()  # We should never get more than one
 
     """
@@ -74,13 +77,13 @@ class PgInstance:
         if row == None:  # New user
             self.curs.execute(
                 "INSERT INTO reminders (fb_id, leetcode_username) VALUES (%s, %s)",
-                (self.fb_id, text),
+                (self.fb_id, text)
             )
             return "Username added.", None
         else:  # Overwrite username for existing user
             self.curs.execute(
                 "UPDATE reminders SET leetcode_username=%s WHERE fb_id=%s",
-                (text, self.fb_id),
+                (text, self.fb_id)
             )
             return "Username updated.", None
 
@@ -100,12 +103,13 @@ class PgInstance:
         if row == None:
             self.curs.execute(
                 "INSERT INTO reminders (fb_id, daily_goal) VALUES (%s, %s)",
-                (self.fb_id, text),
+                (self.fb_id, text)
             )
             return "Daily goal set.", None
         else:
             self.curs.execute(
-                "UPDATE reminders SET daily_goal=%s WHERE fb_id=%s", (text, self.fb_id)
+                "UPDATE reminders SET daily_goal=%s WHERE fb_id=%s", (
+                    text, self.fb_id)
             )
             return "Daily goal updated.", None
 
@@ -125,13 +129,13 @@ class PgInstance:
         if row == None:
             self.curs.execute(
                 "INSERT INTO reminders (fb_id, reminder_time) VALUES (%s, %s)",
-                (self.fb_id, text),
+                (self.fb_id, text)
             )
             return "Reminder set.", None
         else:
             self.curs.execute(
                 "UPDATE reminders SET reminder_time=%s WHERE fb_id=%s",
-                (text, self.fb_id),
+                (text, self.fb_id)
             )
             return "Reminder updated.", None
     
@@ -173,7 +177,8 @@ class PgInstance:
             return "You haven't set a reminder yet!", None
         else:
             self.curs.execute(
-                "SELECT daily_goal FROM reminders WHERE fb_id=%s", (self.fb_id)
+                "SELECT daily_goal FROM reminders WHERE fb_id=%s", (
+                    self.fb_id,)
             )
             return self.curs.fetchone(), None
 
@@ -191,15 +196,27 @@ class PgInstance:
             return "You haven't set a reminder yet!", None
         else:
             self.curs.execute(
-                "UPDATE reminders SET reminder_time=NULL WHERE fb_id=%s", (self.fb_id)
+                "UPDATE reminders SET reminder_time=NULL WHERE fb_id=%s", (
+                    self.fb_id,)
             )
             return "Reminder disabled.", None
 
+    def Delete_user(self):
+        try:
+            self.curs.execute(
+                "DELETE FROM reminders WHERE fb_id=%s", (self.fb_id,))
+            return None
+        except Exception as e:
+            return e
+
     def Get_checklist(self):
+        row = self.get_user_row()
         checklist = {}
-        checklist["leetcode_username"] = getattr(
-            self.get_user_row(), "leetcode_username"
-        )
-        checklist["daily_goal"] = getattr(self.get_user_row(), "daily_goal")
-        checklist["reminder_time"] = getattr(self.get_user_row(), "reminder_time")
+        checklist_items = ["leetcode_username", "daily_goal", "reminder_time"]
+        if row == None:
+            for checklist_item in checklist_items:
+                checklist[checklist_item] = None
+        else:
+            for checklist_item in checklist_items:
+                checklist[checklist_item] = getattr(row, checklist_item)
         return checklist

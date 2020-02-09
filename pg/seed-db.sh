@@ -12,6 +12,7 @@ leetcode_username VARCHAR (255),
 daily_goal smallint,
 questions_completed smallint,
 reminder_time TIMESTAMP,
+reminder_time TIME,
 created TIMESTAMP DEFAULT now() NOT NULL,
 modified TIMESTAMP DEFAULT now() NOT NULL
 );

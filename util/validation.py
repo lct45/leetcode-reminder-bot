@@ -1,4 +1,6 @@
 import re
+import datetime
+import parsedatetime
 
 """
 Validates username submitted by user
@@ -27,10 +29,27 @@ def validate_username(username):
         return "That's not a valid Leetcode username!", False, e
 
 
-def validate_reminder(reminder):
-    pass
+def validate_reminder(reminder_time, timezone):
+    try:
+        cal = parsedatetime.Calendar()
+        reminder_time_parsed = cal.parse(reminder_time)[0]
+        # timezone is time relative to GMT
+        conversion = -1 * timezone["timezone"]
+        r_h = reminder_time_parsed.tm_hour + conversion
+        if r_h > 23:
+            r_h -= 24
+        elif r_h < 0:
+            r_h += 24
+        r_m = reminder_time_parsed.tm_min
+
+        return "", True, None, datetime.time(r_h, r_m)
+    except Exception as e:
+        return "That's not a valid time of day! Try something like: 4:20 pm", False, e
 
 
 def validate_daily_goal(daily_goal):
-    pass
-
+    if daily_goal.isdigit():
+        daily_goal_int = int(daily_goal)
+        if daily_goal_int > 0 and daily_goal_int < 100:
+            return "", True, None
+    return "Please specify a valid daily goal between 1 and 100!", False, None
