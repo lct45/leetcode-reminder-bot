@@ -41,7 +41,8 @@ def validate_reminder(reminder_time, timezone):
         elif r_h < 0:
             r_h += 24
         r_m = reminder_time_parsed.tm_min
-        return datetime.time(r_h, r_m), True, None
+
+        return "", True, None, datetime.time(r_h, r_m)
     except Exception as e:
         return "That's not a valid time of day! Try something like: 4:20 pm", False, e
 
